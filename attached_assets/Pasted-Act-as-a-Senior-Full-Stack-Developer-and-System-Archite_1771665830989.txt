@@ -1,0 +1,169 @@
+Act as a Senior Full-Stack Developer and System Architect.
+
+Build a complete web-based "Smart Hackathon Management & Reminder System" using:
+
+Backend: Python Flask
+Database: SQLite (for development)
+Frontend: HTML, CSS, Bootstrap (clean UI)
+Optional: JavaScript for interactivity
+Authentication: Flask-Login
+ORM: SQLAlchemy
+
+========================
+PROJECT OVERVIEW
+========================
+
+This system is for a college where:
+
+- Admin (Professor) uploads hackathons.
+- Students register for hackathons.
+- Students can track deadlines.
+- System shows registration status.
+- Dashboard shows reminders and statistics.
+
+========================
+USER ROLES
+========================
+
+1. Admin
+2. Student
+
+========================
+CORE FEATURES
+========================
+
+ADMIN FEATURES:
+- Admin login/logout
+- Add new hackathon
+- Edit hackathon
+- Delete hackathon
+- View all hackathons
+- View number of registered students per hackathon
+- View list of registered and not registered students
+- Dashboard with:
+  - Total hackathons
+  - Total students
+  - Registrations count
+  - Upcoming deadlines
+
+STUDENT FEATURES:
+- Student signup/login/logout
+- View all hackathons
+- Register for hackathon
+- Unregister if needed
+- Personal dashboard showing:
+  - Registered hackathons
+  - Upcoming submission deadlines
+  - Registration deadlines
+  - Status (Registered / Not Registered)
+
+========================
+DATABASE DESIGN
+========================
+
+Create SQLAlchemy models:
+
+User:
+- id (Primary Key)
+- name
+- email (Unique)
+- password (hashed)
+- role (admin/student)
+
+Hackathon:
+- id (Primary Key)
+- title
+- description
+- registration_deadline
+- submission_deadline
+- created_by (ForeignKey to User)
+
+Registration:
+- id (Primary Key)
+- student_id (ForeignKey to User)
+- hackathon_id (ForeignKey to Hackathon)
+- timestamp
+
+========================
+BACKEND STRUCTURE
+========================
+
+Use Flask with:
+- Blueprints (auth, admin, student)
+- Flask-Login
+- Password hashing (Werkzeug)
+- Jinja2 templates
+- Flash messages
+- Proper routing structure
+
+Folder structure:
+
+/project
+    /static
+    /templates
+    /auth
+    /admin
+    /student
+    app.py
+    models.py
+    config.py
+    requirements.txt
+
+========================
+UI REQUIREMENTS
+========================
+
+- Clean Bootstrap dashboard
+- Navigation bar with role-based access
+- Cards for hackathons
+- Countdown timer for deadlines
+- Color indicators:
+  - Red → Deadline near
+  - Green → Registered
+  - Yellow → Not registered
+- Responsive design
+
+========================
+EXTRA FEATURES (IMPORTANT)
+========================
+
+- Show warning if deadline is within 3 days
+- Sort hackathons by deadline
+- Filter: Registered / Not Registered
+- Search hackathon by title
+- Display days remaining
+- Prevent duplicate registrations
+- Secure routes (admin only access)
+- Error handling (404, 500)
+
+========================
+ADVANCED EXTENSIONS (OPTIONAL)
+========================
+
+- Email reminders before deadline
+- Admin export registration list as CSV
+- Graph dashboard (using Chart.js)
+- Pagination for hackathons
+- Role-based decorators
+
+========================
+OUTPUT REQUIREMENTS
+========================
+
+1. Provide full working Flask code.
+2. Provide models.py
+3. Provide app.py
+4. Provide all HTML templates.
+5. Provide requirements.txt.
+6. Provide setup instructions.
+7. Provide database initialization steps.
+8. Include sample test data.
+
+Ensure the project runs with:
+
+pip install -r requirements.txt
+python app.py
+
+And the system works fully end-to-end.
+
+Make the code production-ready, clean, modular, and well-structured.
