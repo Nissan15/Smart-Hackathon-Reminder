@@ -41,7 +41,7 @@ export function useCreateHackathon() {
         body: JSON.stringify(data),
         credentials: "include",
       });
-      
+
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || "Failed to create hackathon");
@@ -177,23 +177,4 @@ export function useStats() {
   });
 }
 
-// Demo helper
-export function useMakeAdmin() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
 
-  return useMutation({
-    mutationFn: async () => {
-      const res = await fetch("/api/make-me-admin", {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to upgrade role");
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      toast({ title: "You are now an Admin!", description: "Refresh or navigate to see admin controls." });
-    },
-  });
-}

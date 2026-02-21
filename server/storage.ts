@@ -10,13 +10,13 @@ export interface IStorage {
   createHackathon(hackathon: InsertHackathon & { createdBy: string }): Promise<Hackathon>;
   updateHackathon(id: number, updates: UpdateHackathonRequest): Promise<Hackathon>;
   deleteHackathon(id: number): Promise<void>;
-  
+
   // Registrations
   getRegistrationsForHackathon(hackathonId: number): Promise<any[]>;
   getStudentRegistrations(studentId: string): Promise<Hackathon[]>;
   registerForHackathon(studentId: string, hackathonId: number): Promise<Registration>;
   unregisterFromHackathon(studentId: string, hackathonId: number): Promise<void>;
-  
+
   // Stats
   getAdminStats(): Promise<any>;
   getStudentStats(studentId: string): Promise<any>;
@@ -25,17 +25,17 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getHackathons(userId?: string): Promise<HackathonWithCounts[]> {
     const allHackathons = await db.select().from(hackathons).orderBy(desc(hackathons.registrationDeadline));
-    
+
     // Get counts and user registration status
     return Promise.all(allHackathons.map(async (h) => {
       const [regCount] = await db.select({ count: count() }).from(registrations).where(eq(registrations.hackathonId, h.id));
-      
+
       let isRegistered = false;
       if (userId) {
         const [reg] = await db.select().from(registrations).where(and(eq(registrations.hackathonId, h.id), eq(registrations.studentId, userId)));
         isRegistered = !!reg;
       }
-      
+
       return {
         ...h,
         registrationCount: Number(regCount.count),
@@ -69,11 +69,20 @@ export class DatabaseStorage implements IStorage {
       timestamp: registrations.timestamp,
       studentId: users.id,
       studentName: sql<string>`concat(${users.firstName}, ' ', ${users.lastName})`,
-      studentEmail: users.email
+      studentEmail: users.email,
+      department: users.department,
+      registerNumber: users.registerNumber,
+      profileImageUrl: users.profileImageUrl
     })
-    .from(registrations)
-    .innerJoin(users, eq(registrations.studentId, users.id))
-    .where(eq(registrations.hackathonId, hackathonId));
+      .from(registrations)
+      .innerJoin(users, eq(registrations.studentId, users.id))
+      .where(eq(registrations.hackathonId, hackathonId));
+  }
+
+  async incrementHackathonViews(id: number): Promise<void> {
+    await db.update(hackathons)
+      .set({ views: sql`${hackathons.views} + 1` })
+      .where(eq(hackathons.id, id));
   }
 
   async getStudentRegistrations(studentId: string): Promise<Hackathon[]> {
@@ -81,7 +90,7 @@ export class DatabaseStorage implements IStorage {
       .from(registrations)
       .innerJoin(hackathons, eq(registrations.hackathonId, hackathons.id))
       .where(eq(registrations.studentId, studentId));
-    
+
     return regs.map(r => r.hackathons);
   }
 
@@ -89,7 +98,7 @@ export class DatabaseStorage implements IStorage {
     // Prevent duplicate registrations
     const [existing] = await db.select().from(registrations).where(and(eq(registrations.studentId, studentId), eq(registrations.hackathonId, hackathonId)));
     if (existing) return existing;
-    
+
     const [reg] = await db.insert(registrations).values({ studentId, hackathonId }).returning();
     return reg;
   }
@@ -102,11 +111,13 @@ export class DatabaseStorage implements IStorage {
     const [hCount] = await db.select({ count: count() }).from(hackathons);
     const [sCount] = await db.select({ count: count() }).from(users).where(eq(users.role, 'student'));
     const [rCount] = await db.select({ count: count() }).from(registrations);
-    
+    const [uCount] = await db.select({ count: count() }).from(users);
+
     return {
       totalHackathons: Number(hCount.count),
       totalStudents: Number(sCount.count),
-      totalRegistrations: Number(rCount.count)
+      totalRegistrations: Number(rCount.count),
+      totalUsers: Number(uCount.count)
     };
   }
 

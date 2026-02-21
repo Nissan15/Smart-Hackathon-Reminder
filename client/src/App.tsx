@@ -9,6 +9,10 @@ import { Loader2 } from "lucide-react";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Hackathons from "@/pages/Hackathons";
+import CompleteProfile from "@/pages/CompleteProfile";
+import Profile from "@/pages/Profile";
+import HackathonAnalytics from "@/pages/HackathonAnalytics";
+import HackathonDetails from "@/pages/HackathonDetails";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -26,6 +30,11 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     return <Redirect to="/login" />;
   }
 
+  // If student profile is incomplete and we aren't already on the complete profile page
+  if (user.role === "student" && !user.profileCompleted && window.location.pathname !== "/complete-profile") {
+    return <Redirect to="/complete-profile" />;
+  }
+
   return <Component />;
 }
 
@@ -33,7 +42,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
-      
+      <Route path="/complete-profile" component={CompleteProfile} />
+
       {/* Protected Routes */}
       <Route path="/">
         <ProtectedRoute component={Dashboard} />
@@ -41,7 +51,16 @@ function Router() {
       <Route path="/hackathons">
         <ProtectedRoute component={Hackathons} />
       </Route>
-      
+      <Route path="/hackathons/:id">
+        <ProtectedRoute component={HackathonDetails} />
+      </Route>
+      <Route path="/profile">
+        <ProtectedRoute component={Profile} />
+      </Route>
+      <Route path="/admin/hackathons/:id">
+        <ProtectedRoute component={HackathonAnalytics} />
+      </Route>
+
       {/* Fallback */}
       <Route component={NotFound} />
     </Switch>

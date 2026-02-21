@@ -1,0 +1,115 @@
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { Redirect } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, UserPlus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
+
+export default function CompleteProfile() {
+    const { user, completeProfile, isCompletingProfile } = useAuth();
+    const { toast } = useToast();
+
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [department, setDepartment] = useState("");
+    const [registerNumber, setRegisterNumber] = useState("");
+
+    useEffect(() => {
+        if (user?.firstName) setFirstName(user.firstName);
+        if (user?.lastName) setLastName(user.lastName);
+    }, [user]);
+
+    if (!user) return <Redirect to="/login" />;
+    if (user.profileCompleted) return <Redirect to="/" />;
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await completeProfile({ firstName, lastName, department, registerNumber });
+            toast({ title: "Profile Completed", description: "Welcome to the platform!" });
+        } catch (error: any) {
+            toast({
+                title: "Error",
+                description: error.message,
+                variant: "destructive",
+            });
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-md"
+            >
+                <Card className="shadow-xl">
+                    <CardHeader className="text-center">
+                        <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
+                            <UserPlus className="w-6 h-6 text-primary" />
+                        </div>
+                        <CardTitle className="text-2xl font-bold font-display">Complete Your Profile</CardTitle>
+                        <CardDescription>
+                            Please provide your details to access the dashboard.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="firstName">First Name</Label>
+                                    <Input
+                                        id="firstName"
+                                        value={firstName}
+                                        onChange={(e) => setFirstName(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="lastName">Last Name</Label>
+                                    <Input
+                                        id="lastName"
+                                        value={lastName}
+                                        onChange={(e) => setLastName(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="department">Department</Label>
+                                <Input
+                                    id="department"
+                                    placeholder="e.g. Computer Science"
+                                    value={department}
+                                    onChange={(e) => setDepartment(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="regNumber">Register Number</Label>
+                                <Input
+                                    id="regNumber"
+                                    placeholder="e.g. 21CS001"
+                                    value={registerNumber}
+                                    onChange={(e) => setRegisterNumber(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <Button type="submit" className="w-full h-11" disabled={isCompletingProfile}>
+                                {isCompletingProfile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Finish Setup
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            </motion.div>
+        </div>
+    );
+}

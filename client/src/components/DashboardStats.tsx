@@ -1,6 +1,6 @@
 import { useStats } from "@/hooks/use-hackathons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Users, Calendar, AlertCircle } from "lucide-react";
+import { Trophy, Users, Calendar, AlertCircle, Shield } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,8 +22,8 @@ export function DashboardStats() {
   const cards = isAdmin ? [
     { title: "Total Hackathons", value: stats.totalHackathons || 0, icon: Trophy, color: "text-blue-500", bg: "bg-blue-500/10" },
     { title: "Active Students", value: stats.totalStudents || 0, icon: Users, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { title: "Total Registrations", value: stats.totalRegistrations || 0, icon: Calendar, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { title: "Upcoming Deadlines", value: stats.upcomingDeadlines || 0, icon: AlertCircle, color: "text-orange-500", bg: "bg-orange-500/10" },
+    { title: "Platform Users", value: stats.totalUsers || 0, icon: Shield, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { title: "Total Registrations", value: stats.totalRegistrations || 0, icon: Calendar, color: "text-orange-500", bg: "bg-orange-500/10" },
   ] : [
     { title: "My Hackathons", value: stats.registeredCount || 0, icon: Trophy, color: "text-blue-500", bg: "bg-blue-500/10" },
     { title: "Upcoming Deadlines", value: stats.upcomingDeadlines || 0, icon: AlertCircle, color: "text-orange-500", bg: "bg-orange-500/10" },
@@ -61,7 +61,7 @@ export function DashboardStats() {
               <BarChart data={stats.registrationsByHackathon}>
                 <XAxis dataKey="title" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-                <Tooltip 
+                <Tooltip
                   cursor={{ fill: 'transparent' }}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                 />

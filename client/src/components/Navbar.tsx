@@ -1,14 +1,12 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { useMakeAdmin } from "@/hooks/use-hackathons";
 import { LogOut, User, LayoutDashboard, Calendar as CalendarIcon, Shield } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Navbar() {
   const { user, logout } = useAuth();
-  const makeAdmin = useMakeAdmin();
   const isAdmin = user?.role === 'admin' || (user as any)?.isAdmin;
 
   if (!user) return null;
@@ -29,25 +27,25 @@ export function Navbar() {
 
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-1 mr-4">
-             <Link href="/">
-               <Button variant="ghost" className="text-muted-foreground hover:text-primary">
-                 Dashboard
-               </Button>
-             </Link>
-             <Link href="/hackathons">
-               <Button variant="ghost" className="text-muted-foreground hover:text-primary">
-                 Browse Events
-               </Button>
-             </Link>
+            <Link href="/">
+              <Button variant="ghost" className="text-muted-foreground hover:text-primary">
+                Dashboard
+              </Button>
+            </Link>
+            <Link href="/hackathons">
+              <Button variant="ghost" className="text-muted-foreground hover:text-primary">
+                Browse Events
+              </Button>
+            </Link>
           </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10 border-2 border-primary/20">
-                  <AvatarImage src={(user as any).profileImageUrl} alt={user.username || "User"} />
+                  <AvatarImage src={(user as any).profileImageUrl} alt={user.email || "User"} />
                   <AvatarFallback className="bg-primary/10 text-primary">
-                    {(user as any).firstName?.[0] || user.username?.[0] || "U"}
+                    {(user as any).firstName?.[0] || user.email?.[0] || "U"}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -74,16 +72,14 @@ export function Navbar() {
                   <span>Hackathons</span>
                 </Link>
               </DropdownMenuItem>
-              
-              {!isAdmin && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => makeAdmin.mutate()} className="cursor-pointer text-blue-600 focus:text-blue-700">
-                    <Shield className="mr-2 h-4 w-4" />
-                    <span>Demo: Become Admin</span>
-                  </DropdownMenuItem>
-                </>
-              )}
+              <DropdownMenuItem asChild>
+                <Link href="/profile" className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>My Profile</span>
+                </Link>
+              </DropdownMenuItem>
+
+
 
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => logout()} className="cursor-pointer text-red-600 focus:text-red-700">

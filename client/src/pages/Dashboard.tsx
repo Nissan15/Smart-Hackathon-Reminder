@@ -3,6 +3,7 @@ import { Navbar } from "@/components/Navbar";
 import { DashboardStats } from "@/components/DashboardStats";
 import { useHackathons } from "@/hooks/use-hackathons";
 import { HackathonCard } from "@/components/HackathonCard";
+import { UserList } from "@/components/UserList";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowRight, Download } from "lucide-react";
 import { Link } from "wouter";
@@ -11,28 +12,28 @@ import { motion } from "framer-motion";
 export default function Dashboard() {
   const { user } = useAuth();
   const { data: hackathons, isLoading } = useHackathons();
-  
+
   const isAdmin = user?.role === 'admin' || (user as any)?.isAdmin;
-  
+
   // For admins, download CSV logic
   const handleExportCSV = () => {
     if (!hackathons) return;
-    
+
     // Convert data to CSV string
     const headers = ["ID", "Title", "Registrations", "Reg Deadline", "Sub Deadline", "Created By"];
     const rows = hackathons.map(h => [
-      h.id, 
-      `"${h.title}"`, 
-      h.registrationCount, 
+      h.id,
+      `"${h.title}"`,
+      h.registrationCount,
       new Date(h.registrationDeadline).toLocaleDateString(),
       new Date(h.submissionDeadline).toLocaleDateString(),
       h.createdBy
     ]);
-    
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + headers.join(",") + "\n" 
+
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + headers.join(",") + "\n"
       + rows.map(r => r.join(",")).join("\n");
-      
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -44,19 +45,19 @@ export default function Dashboard() {
 
   // Filter hackathons for display
   // Admin sees all recent ones, Students see their registered ones
-  const displayedHackathons = isAdmin 
-    ? hackathons 
+  const displayedHackathons = isAdmin
+    ? hackathons
     : hackathons?.filter(h => h.isRegistered);
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-zinc-950">
       <Navbar />
-      
+
       <main className="container py-8 space-y-8">
         <header className="flex justify-between items-end">
           <div>
             <h1 className="text-3xl font-bold font-display tracking-tight text-foreground">
-              Hello, {(user as any).firstName || user?.username}!
+              Hello, {(user as any).firstName || user?.email || "User"}!
             </h1>
             <p className="text-muted-foreground mt-1">Here's what's happening with your hackathons today.</p>
           </div>
@@ -100,18 +101,24 @@ export default function Dashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {displayedHackathons?.slice(0, 3).map((hackathon, idx) => (
-                 <motion.div
-                   key={hackathon.id}
-                   initial={{ opacity: 0, y: 20 }}
-                   animate={{ opacity: 1, y: 0 }}
-                   transition={{ duration: 0.3, delay: idx * 0.1 }}
-                 >
-                   <HackathonCard hackathon={hackathon} />
-                 </motion.div>
+                <motion.div
+                  key={hackathon.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: idx * 0.1 }}
+                >
+                  <HackathonCard hackathon={hackathon} />
+                </motion.div>
               ))}
             </div>
           )}
         </section>
+
+        {isAdmin && (
+          <section className="mt-12">
+            <UserList />
+          </section>
+        )}
       </main>
     </div>
   );

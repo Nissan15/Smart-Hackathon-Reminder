@@ -12,13 +12,14 @@ export const hackathons = pgTable("hackathons", {
   description: text("description").notNull(),
   registrationDeadline: timestamp("registration_deadline").notNull(),
   submissionDeadline: timestamp("submission_deadline").notNull(),
-  createdBy: varchar("created_by").notNull().references(() => users.id),
+  views: integer("views").notNull().default(0),
+  createdBy: varchar("created_by").notNull().references(() => users.id, { onDelete: 'cascade' }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const registrations = pgTable("registrations", {
   id: serial("id").primaryKey(),
-  studentId: varchar("student_id").notNull().references(() => users.id),
+  studentId: varchar("student_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   hackathonId: integer("hackathon_id").notNull().references(() => hackathons.id, { onDelete: 'cascade' }),
   timestamp: timestamp("timestamp").defaultNow(),
 });
@@ -33,10 +34,10 @@ export const registrationsRelations = relations(registrations, ({ one }) => ({
   hackathon: one(hackathons, { fields: [registrations.hackathonId], references: [hackathons.id] }),
 }));
 
-export const insertHackathonSchema = createInsertSchema(hackathons).omit({ 
-  id: true, 
-  createdBy: true, 
-  createdAt: true 
+export const insertHackathonSchema = createInsertSchema(hackathons).omit({
+  id: true,
+  createdBy: true,
+  createdAt: true
 }).extend({
   registrationDeadline: z.coerce.date(),
   submissionDeadline: z.coerce.date()
@@ -48,7 +49,7 @@ export type Hackathon = typeof hackathons.$inferSelect;
 export type InsertRegistration = { hackathonId: number };
 export type Registration = typeof registrations.$inferSelect;
 
-export type HackathonWithCounts = Hackathon & { 
+export type HackathonWithCounts = Hackathon & {
   registrationCount: number;
   isRegistered?: boolean;
 };
