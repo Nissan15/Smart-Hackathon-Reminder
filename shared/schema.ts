@@ -13,6 +13,7 @@ export const hackathons = pgTable("hackathons", {
   registrationDeadline: timestamp("registration_deadline").notNull(),
   submissionDeadline: timestamp("submission_deadline").notNull(),
   views: integer("views").notNull().default(0),
+  link: text("link"),
   createdBy: varchar("created_by").notNull().references(() => users.id, { onDelete: 'cascade' }),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -40,7 +41,8 @@ export const insertHackathonSchema = createInsertSchema(hackathons).omit({
   createdAt: true
 }).extend({
   registrationDeadline: z.coerce.date(),
-  submissionDeadline: z.coerce.date()
+  submissionDeadline: z.coerce.date(),
+  link: z.string().url().optional().or(z.literal("")),
 });
 
 export type InsertHackathon = z.infer<typeof insertHackathonSchema>;

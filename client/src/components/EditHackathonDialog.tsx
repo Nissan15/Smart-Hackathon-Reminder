@@ -31,6 +31,7 @@ export function EditHackathonDialog({ hackathon, open, onOpenChange }: EditHacka
     defaultValues: {
       title: hackathon.title,
       description: hackathon.description,
+      link: hackathon.link || "",
       registrationDeadline: format(new Date(hackathon.registrationDeadline), 'yyyy-MM-dd') as any,
       submissionDeadline: format(new Date(hackathon.submissionDeadline), 'yyyy-MM-dd') as any,
     },
@@ -81,6 +82,20 @@ export function EditHackathonDialog({ hackathon, open, onOpenChange }: EditHacka
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea className="resize-none" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="link"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Hackathon Link</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. https://hackathon.com" {...field} value={field.value || ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -5,7 +5,7 @@ import { useRegisterForHackathon, useUnregisterFromHackathon } from "@/hooks/use
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, Clock, Users, ArrowLeft, Trophy, Info, CheckCircle2 } from "lucide-react";
+import { Loader2, Calendar, Clock, Users, ArrowLeft, Trophy, Info, CheckCircle2, ExternalLink } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -56,7 +56,7 @@ export default function HackathonDetails() {
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
             <Navbar />
-            <main className="container max-w-4xl py-12 px-6">
+            <main className="container py-12">
                 <Link href="/hackathons">
                     <Button variant="ghost" size="sm" className="mb-6 -ml-2 text-muted-foreground hover:text-primary">
                         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -111,6 +111,15 @@ export default function HackathonDetails() {
                                 >
                                     {isExpired ? "Registration Closed" : register.isPending ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Complete Registration"}
                                 </Button>
+                            )}
+
+                            {hackathon.link && (
+                                <a href={hackathon.link} target="_blank" rel="noopener noreferrer" className="w-full">
+                                    <Button variant="outline" size="lg" className="w-full h-14 text-lg font-semibold border-primary/20 hover:bg-primary/5">
+                                        <ExternalLink className="mr-2 h-5 w-5" />
+                                        Visit Official Site
+                                    </Button>
+                                </a>
                             )}
                         </div>
                     </div>
@@ -228,6 +237,6 @@ export default function HackathonDetails() {
                     </div>
                 </motion.div>
             </main>
-        </div>
+        </div >
     );
 }

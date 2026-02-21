@@ -29,6 +29,7 @@ export function CreateHackathonDialog() {
     defaultValues: {
       title: "",
       description: "",
+      link: "",
       // Date inputs need YYYY-MM-DD string format initially
       registrationDeadline: new Date().toISOString().split('T')[0] as any,
       submissionDeadline: new Date().toISOString().split('T')[0] as any,
@@ -81,9 +82,23 @@ export function CreateHackathonDialog() {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>About the Hackathon</FormLabel>
                   <FormControl>
                     <Textarea placeholder="What is this hackathon about?" className="resize-none" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="link"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Hackathon Link</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. https://hackathon.com" {...field} value={field.value || ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -132,6 +147,6 @@ export function CreateHackathonDialog() {
           </form>
         </Form>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

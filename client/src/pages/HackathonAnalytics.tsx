@@ -46,7 +46,7 @@ export default function HackathonAnalytics() {
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
             <Navbar />
-            <main className="container py-8 px-6">
+            <main className="container py-8">
                 <div className="mb-8 flex items-center justify-between">
                     <div>
                         <Link href="/">
