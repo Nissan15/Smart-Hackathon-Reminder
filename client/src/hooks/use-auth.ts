@@ -72,7 +72,7 @@ export function useAuth() {
   });
 
   const completeProfileMutation = useMutation({
-    mutationFn: async (profileData: { firstName: string; lastName: string; department: string; registerNumber: string }) => {
+    mutationFn: async (profileData: { firstName: string; lastName: string; department: string; registerNumber: string; section: string; yearOfGraduation: number }) => {
       const response = await fetch("/api/user/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

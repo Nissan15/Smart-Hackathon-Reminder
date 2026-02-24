@@ -88,6 +88,15 @@ export const api = {
       }
     }
   },
+  notifications: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/notifications' as const,
+      responses: {
+        200: z.array(z.any()),
+      }
+    }
+  },
   stats: {
     dashboard: {
       method: 'GET' as const,

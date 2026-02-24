@@ -1,95 +1,89 @@
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { Bell, Search, ChevronDown, User as UserIcon, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, LayoutDashboard, Calendar as CalendarIcon, Shield } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "./ThemeToggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { NotificationPanel } from "./NotificationPanel";
 
 export function Navbar() {
+  const [location] = useLocation();
   const { user, logout } = useAuth();
-  const isAdmin = user?.role === 'admin' || (user as any)?.isAdmin;
 
-  if (!user) return null;
+  const getTitle = (path: string) => {
+    switch (path) {
+      case "/": return "Dashboard";
+      case "/hackathons": return "Hackathons";
+      case "/registered": return "Registered";
+      case "/deadlines": return "Deadlines";
+      case "/profile": return "Profile";
+      default: return "HackManager";
+    }
+  };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <CalendarIcon className="h-6 w-6 text-primary" />
-            </div>
-            <span className="font-display font-bold text-xl hidden sm:inline-block">
-              HackMatch
-            </span>
-          </Link>
-        </div>
+    <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 border-b border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md">
+      {/* Title & Search */}
+      <div className="flex items-center gap-8 flex-1">
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white hidden md:block min-w-max">
+          {getTitle(location)}
+        </h1>
 
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-1 mr-4">
-            <Link href="/">
-              <Button variant="ghost" className="text-muted-foreground hover:text-primary">
-                Dashboard
-              </Button>
-            </Link>
-            <Link href="/hackathons">
-              <Button variant="ghost" className="text-muted-foreground hover:text-primary">
-                Browse Events
-              </Button>
-            </Link>
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                <Avatar className="h-10 w-10 border-2 border-primary/20">
-                  <AvatarImage src={(user as any).profileImageUrl} alt={user.email || "User"} />
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    {(user as any).firstName?.[0] || user.email?.[0] || "U"}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{(user as any).firstName} {(user as any).lastName}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {(user as any).email}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/" className="cursor-pointer">
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  <span>Dashboard</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/hackathons" className="cursor-pointer">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  <span>Hackathons</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/profile" className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>My Profile</span>
-                </Link>
-              </DropdownMenuItem>
-
-
-
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => logout()} className="cursor-pointer text-red-600 focus:text-red-700">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="hidden lg:flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl px-4 py-2 border border-slate-200 dark:border-slate-700 w-96 focus-within:ring-2 ring-indigo-500/20 transition-all">
+          <Search className="w-4 h-4 text-slate-400 mr-3" />
+          <input
+            type="text"
+            placeholder="Search hackathons..."
+            className="bg-transparent border-none outline-none text-sm w-full placeholder:text-slate-400 text-slate-900 dark:text-slate-100"
+          />
         </div>
       </div>
-    </nav>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2 md:gap-4">
+        <ThemeToggle />
+
+        <NotificationPanel />
+
+        <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2 hidden sm:block" />
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-3 cursor-pointer group px-2 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                {user?.email?.[0].toUpperCase() || "U"}
+              </div>
+              <div className="hidden sm:block text-left">
+                <p className="text-sm font-bold leading-none text-slate-900 dark:text-white mb-0.5">
+                  {(user as any)?.firstName || "Guest"}
+                </p>
+                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider leading-none">
+                  {user?.role || "Member"}
+                </p>
+              </div>
+              <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 rounded-2xl mt-2 p-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl">
+            <DropdownMenuLabel className="font-heading px-3 py-2">Account</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
+            <DropdownMenuItem className="rounded-xl cursor-pointer py-2 px-3 focus:bg-slate-100 dark:focus:bg-slate-800 gap-2">
+              <UserIcon size={16} /> Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem className="rounded-xl cursor-pointer py-2 px-3 text-red-500 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-500/10 gap-2" onClick={() => logout()}>
+              <LogOut size={16} /> Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
   );
 }

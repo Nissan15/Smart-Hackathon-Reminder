@@ -9,6 +9,14 @@ import { Loader2, User as UserIcon, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { DEPARTMENTS, SECTIONS, GRADUATION_YEARS } from "@shared/constants";
 
 export default function Profile() {
     const { user, completeProfile, isCompletingProfile } = useAuth();
@@ -17,23 +25,49 @@ export default function Profile() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [department, setDepartment] = useState("");
+    const [customDepartment, setCustomDepartment] = useState("");
+    const [section, setSection] = useState("");
+    const [yearOfGraduation, setYearOfGraduation] = useState("");
     const [registerNumber, setRegisterNumber] = useState("");
 
     useEffect(() => {
         if (user) {
             setFirstName(user.firstName || "");
             setLastName(user.lastName || "");
-            setDepartment(user.department || "");
             setRegisterNumber(user.registerNumber || "");
+            setSection(user.section || "");
+            setYearOfGraduation(user.yearOfGraduation?.toString() || "");
+
+            if (user.department) {
+                if (DEPARTMENTS.includes(user.department as any)) {
+                    setDepartment(user.department);
+                } else {
+                    setDepartment("Others");
+                    setCustomDepartment(user.department);
+                }
+            }
         }
     }, [user]);
 
     if (!user) return <Redirect to="/login" />;
 
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await completeProfile({ firstName, lastName, department, registerNumber });
+            const finalDepartment = department === "Others" ? customDepartment : department;
+            if (department === "Others" && !customDepartment) {
+                throw new Error("Please enter your department");
+            }
+
+            await completeProfile({
+                firstName,
+                lastName,
+                department: finalDepartment,
+                registerNumber,
+                section,
+                yearOfGraduation: parseInt(yearOfGraduation)
+            });
             toast({ title: "Profile Updated", description: "Your changes have been saved successfully." });
         } catch (error: any) {
             toast({
@@ -109,14 +143,18 @@ export default function Profile() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
                                             <Label htmlFor="department">Department</Label>
-                                            <Input
-                                                id="department"
-                                                placeholder="e.g. Computer Science"
-                                                value={department}
-                                                onChange={(e) => setDepartment(e.target.value)}
-                                                required
-                                                className="bg-zinc-50/50 dark:bg-zinc-900/50"
-                                            />
+                                            <Select value={department} onValueChange={setDepartment} required>
+                                                <SelectTrigger id="department" className="bg-zinc-50/50 dark:bg-zinc-900/50">
+                                                    <SelectValue placeholder="Select Department" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {DEPARTMENTS.map((dept) => (
+                                                        <SelectItem key={dept} value={dept}>
+                                                            {dept}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="regNumber">Register Number</Label>
@@ -128,6 +166,53 @@ export default function Profile() {
                                                 required
                                                 className="bg-zinc-50/50 dark:bg-zinc-900/50"
                                             />
+                                        </div>
+                                    </div>
+
+                                    {department === "Others" && (
+                                        <div className="space-y-2">
+                                            <Label htmlFor="customDepartment">Enter Your Department</Label>
+                                            <Input
+                                                id="customDepartment"
+                                                placeholder="e.g. Mechanical Engineering"
+                                                value={customDepartment}
+                                                onChange={(e) => setCustomDepartment(e.target.value)}
+                                                required
+                                                className="bg-zinc-50/50 dark:bg-zinc-900/50"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="section">Section</Label>
+                                            <Select value={section} onValueChange={setSection} required>
+                                                <SelectTrigger id="section" className="bg-zinc-50/50 dark:bg-zinc-900/50">
+                                                    <SelectValue placeholder="Select Section" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {SECTIONS.map((sec) => (
+                                                        <SelectItem key={sec} value={sec}>
+                                                            {sec}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="yearOfGraduation">Graduation Year</Label>
+                                            <Select value={yearOfGraduation} onValueChange={setYearOfGraduation} required>
+                                                <SelectTrigger id="yearOfGraduation" className="bg-zinc-50/50 dark:bg-zinc-900/50">
+                                                    <SelectValue placeholder="Select Year" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {GRADUATION_YEARS.map((year) => (
+                                                        <SelectItem key={year} value={year}>
+                                                            {year}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     </div>
                                 </div>

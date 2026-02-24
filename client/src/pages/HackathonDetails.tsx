@@ -5,10 +5,22 @@ import { useRegisterForHackathon, useUnregisterFromHackathon } from "@/hooks/use
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, Clock, Users, ArrowLeft, Trophy, Info, CheckCircle2, ExternalLink } from "lucide-react";
-import { Navbar } from "@/components/Navbar";
+import {
+    Loader2,
+    Calendar,
+    Clock,
+    Users,
+    ArrowLeft,
+    Trophy,
+    Info,
+    CheckCircle2,
+    ExternalLink,
+    Sparkles,
+    Zap,
+    Target
+} from "lucide-react";
 import { format } from "date-fns";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function HackathonDetails() {
     const { id } = useParams<{ id: string }>();
@@ -29,19 +41,23 @@ export default function HackathonDetails() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="min-h-[60vh] flex flex-col items-center justify-center">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+                <p className="text-muted-foreground font-bold tracking-widest uppercase text-xs">Loading Event Data...</p>
             </div>
         );
     }
 
     if (error || !hackathon) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-                <h2 className="text-2xl font-bold text-destructive mb-2">Not Found</h2>
-                <p className="text-muted-foreground mb-4">The hackathon you're looking for doesn't exist.</p>
+            <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+                <div className="bg-rose-500/10 p-6 rounded-full mb-6">
+                    <Info className="h-10 w-10 text-rose-500" />
+                </div>
+                <h2 className="text-2xl font-heading font-bold mb-2">Event Not Found</h2>
+                <p className="text-muted-foreground mb-8 max-w-sm">The hackathon you are looking for has been moved or no longer exists.</p>
                 <Link href="/hackathons">
-                    <Button variant="outline">Back to Hackathons</Button>
+                    <Button variant="outline" className="rounded-xl font-bold border-2">Return to Events</Button>
                 </Link>
             </div>
         );
@@ -54,189 +70,179 @@ export default function HackathonDetails() {
     const isRegistered = hackathon.isRegistered;
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-            <Navbar />
-            <main className="container py-12">
-                <Link href="/hackathons">
-                    <Button variant="ghost" size="sm" className="mb-6 -ml-2 text-muted-foreground hover:text-primary">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Events
-                    </Button>
-                </Link>
+        <div className="space-y-10 animate-enter">
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <Link href="/hackathons">
+                        <Button variant="ghost" size="sm" className="mb-4 -ml-2 text-muted-foreground hover:text-primary font-bold">
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Ecosystem
+                        </Button>
+                    </Link>
+                    <div className="flex items-center gap-3 mb-4">
+                        <Badge className={isRegistered ? "bg-primary text-white" : "bg-muted text-muted-foreground"}>
+                            {isRegistered ? "Active Registration" : isExpired ? "Event Closed" : "Applications Open"}
+                        </Badge>
+                        {isRegistered && (
+                            <span className="text-sm text-green-500 font-bold flex items-center gap-1">
+                                <CheckCircle2 className="h-4 w-4" /> Participation Confirmed
+                            </span>
+                        )}
+                    </div>
+                    <h1 className="text-5xl font-heading font-extrabold tracking-tight">
+                        {hackathon.title}
+                    </h1>
+                    <p className="text-xl text-muted-foreground mt-4 font-medium max-w-2xl leading-relaxed">
+                        Push the boundaries of technology and compete with the brightest minds in the ecosystem.
+                    </p>
+                </div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="space-y-8"
-                >
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-3 mb-2">
-                                <Badge variant={isRegistered ? "default" : "secondary"} className={isRegistered ? "bg-green-500" : ""}>
-                                    {isRegistered ? "Registered" : isExpired ? "Closed" : "Open"}
-                                </Badge>
-                                {isRegistered && (
-                                    <span className="text-sm text-green-600 font-medium flex items-center gap-1">
-                                        <CheckCircle2 className="h-4 w-4" />
-                                        You're in!
-                                    </span>
-                                )}
+                <div className="flex flex-col sm:row gap-3 min-w-[240px]">
+                    <AnimatePresence mode="wait">
+                        {isRegistered ? (
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                className="h-14 rounded-2xl border-2 border-rose-500/20 text-rose-500 hover:bg-rose-50 font-bold text-lg"
+                                onClick={() => unregister.mutate(hackathon.id)}
+                                disabled={unregister.isPending || isExpired}
+                            >
+                                {unregister.isPending ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Unregister"}
+                            </Button>
+                        ) : (
+                            <Button
+                                size="lg"
+                                className="h-14 rounded-2xl btn-gradient font-bold text-lg shadow-xl shadow-primary/25"
+                                onClick={() => register.mutate(hackathon.id)}
+                                disabled={register.isPending || isExpired}
+                            >
+                                {isExpired ? "Registration Closed" : register.isPending ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Approve & Join"}
+                                {!isExpired && !register.isPending && <Zap className="ml-2 w-5 h-5" />}
+                            </Button>
+                        )}
+                    </AnimatePresence>
+
+                    {hackathon.link && (
+                        <a href={hackathon.link} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" size="lg" className="w-full h-14 rounded-2xl border-2 font-bold text-lg">
+                                <ExternalLink className="mr-2 h-5 w-5" />
+                                Review Site
+                            </Button>
+                        </a>
+                    )}
+                </div>
+            </header>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[
+                    { title: "Registration End", value: format(registrationDeadline, 'MMMM d, yyyy'), icon: Calendar, gradient: "from-blue-500/10 to-indigo-500/5" },
+                    { title: "Final Deliverable", value: format(submissionDeadline, 'MMMM d, yyyy'), icon: Clock, gradient: "from-purple-500/10 to-pink-500/5" },
+                    { title: "Community Size", value: `${hackathon.registrationCount || 0} Innovators`, icon: Users, gradient: "from-emerald-500/10 to-teal-800/5" },
+                ].map((stat, idx) => (
+                    <Card key={idx} className={`border-none shadow-xl bg-gradient-to-br ${stat.gradient} rounded-[2rem]`}>
+                        <CardHeader className="pb-2">
+                            <stat.icon className="h-6 w-6 text-primary mb-2 opacity-80" />
+                            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{stat.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-heading font-extrabold">{stat.value}</div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <div className="lg:col-span-2 space-y-10">
+                    <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
+                        <CardHeader className="bg-muted/30 px-10 py-8 border-b">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 bg-primary/10 rounded-2xl">
+                                    <Info className="h-6 w-6 text-primary" />
+                                </div>
+                                <CardTitle className="text-2xl font-heading font-bold">Event Narrative</CardTitle>
                             </div>
-                            <h1 className="text-4xl font-bold font-display tracking-tight text-foreground">
-                                {hackathon.title}
-                            </h1>
-                            <p className="text-xl text-muted-foreground max-w-2xl">
-                                Elevate your skills and build something amazing.
+                        </CardHeader>
+                        <CardContent className="px-10 py-10">
+                            <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap font-medium">
+                                {hackathon.description}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
+                        <CardHeader className="bg-muted/30 px-10 py-8 border-b">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 bg-amber-500/10 rounded-2xl">
+                                    <Trophy className="h-6 w-6 text-amber-600" />
+                                </div>
+                                <CardTitle className="text-2xl font-heading font-bold">Rules of Engagement</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="px-10 py-10">
+                            <ul className="space-y-6">
+                                {[
+                                    "Synchronous delivery required by the final deadline.",
+                                    "Individual or collaborative team formations (check specific guidelines).",
+                                    "Zero tolerance for non-original intellectual property.",
+                                    "Minimum viable prototype must be demonstrated."
+                                ].map((rule, idx) => (
+                                    <li key={idx} className="flex gap-4">
+                                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <div className="h-2 w-2 rounded-full bg-primary" />
+                                        </div>
+                                        <span className="text-lg font-medium text-muted-foreground leading-snug">{rule}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="space-y-8">
+                    <Card className="border-none shadow-2xl bg-zinc-900 text-white rounded-[2.5rem] overflow-hidden sticky top-28">
+                        <div className="absolute top-0 right-0 p-6 opacity-20">
+                            <Sparkles size={140} />
+                        </div>
+                        <CardHeader className="px-8 pt-10">
+                            <CardTitle className="text-3xl font-heading font-extrabold">Ready to Build?</CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-8 pb-10 relative z-10">
+                            <p className="text-zinc-400 text-lg mb-8 leading-relaxed font-medium">
+                                Join a community of developers and designers. Pushing the limits of what's possible is just the beginning.
                             </p>
-                        </div>
-
-                        <div className="flex flex-col gap-3 min-w-[200px]">
-                            {isRegistered ? (
-                                <Button
-                                    size="lg"
-                                    variant="outline"
-                                    className="w-full border-red-200 hover:bg-red-50 hover:text-red-600 h-14 text-lg font-semibold"
-                                    onClick={() => unregister.mutate(hackathon.id)}
-                                    disabled={unregister.isPending || isExpired}
-                                >
-                                    {unregister.isPending ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : null}
-                                    Unregister from Event
-                                </Button>
-                            ) : (
-                                <Button
-                                    size="lg"
-                                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 h-14 text-lg font-semibold"
-                                    onClick={() => register.mutate(hackathon.id)}
-                                    disabled={register.isPending || isExpired}
-                                >
-                                    {isExpired ? "Registration Closed" : register.isPending ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Complete Registration"}
-                                </Button>
-                            )}
-
-                            {hackathon.link && (
-                                <a href={hackathon.link} target="_blank" rel="noopener noreferrer" className="w-full">
-                                    <Button variant="outline" size="lg" className="w-full h-14 text-lg font-semibold border-primary/20 hover:bg-primary/5">
-                                        <ExternalLink className="mr-2 h-5 w-5" />
-                                        Visit Official Site
-                                    </Button>
-                                </a>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <Card className="border-none shadow-md bg-white dark:bg-zinc-900">
-                            <CardHeader className="pb-2">
-                                <Calendar className="h-5 w-5 text-primary mb-2" />
-                                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Registration Ends</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-xl font-bold font-display">{format(registrationDeadline, 'MMMM d, yyyy')}</div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="border-none shadow-md bg-white dark:bg-zinc-900">
-                            <CardHeader className="pb-2">
-                                <Clock className="h-5 w-5 text-primary mb-2" />
-                                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Final Submission</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-xl font-bold font-display">{format(submissionDeadline, 'MMMM d, yyyy')}</div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="border-none shadow-md bg-white dark:bg-zinc-900">
-                            <CardHeader className="pb-2">
-                                <Users className="h-5 w-5 text-primary mb-2" />
-                                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Current Participants</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-xl font-bold font-display">{hackathon.registrationCount || 0} Students</div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="lg:col-span-2 space-y-8">
-                            <Card className="border-none shadow-md overflow-hidden">
-                                <CardHeader className="bg-primary/5 border-b">
-                                    <div className="flex items-center gap-2">
-                                        <Info className="h-5 w-5 text-primary" />
-                                        <CardTitle className="text-xl font-bold">About this Hackathon</CardTitle>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="pt-6">
-                                    <div className="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                        {hackathon.description}
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="border-none shadow-md overflow-hidden">
-                                <CardHeader className="bg-primary/5 border-b">
-                                    <div className="flex items-center gap-2">
-                                        <Trophy className="h-5 w-5 text-primary" />
-                                        <CardTitle className="text-xl font-bold">Rules & Guidelines</CardTitle>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="pt-6">
-                                    <ul className="space-y-3 text-muted-foreground">
-                                        <li className="flex gap-3">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                                            Projects must be submitted before the submission deadline.
-                                        </li>
-                                        <li className="flex gap-3">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                                            Individual or team participation allowed (check specific event rules).
-                                        </li>
-                                        <li className="flex gap-3">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                                            Plagiarism will result in immediate disqualification.
-                                        </li>
-                                    </ul>
-                                </CardContent>
-                            </Card>
-                        </div>
-
-                        <div className="space-y-6">
-                            <Card className="border-none shadow-md bg-primary text-primary-foreground">
-                                <CardHeader>
-                                    <CardTitle>Ready to Innovate?</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="text-primary-foreground/80 mb-6">
-                                        Join hundreds of other students and push your boundaries. Registering takes less than a minute.
-                                    </p>
-                                    <div className="p-4 bg-white/10 rounded-xl space-y-2">
-                                        <div className="text-xs uppercase tracking-widest font-bold opacity-60">Status</div>
-                                        <div className="font-semibold">{isExpired ? "Closed" : isRegistered ? "You're Registered" : "Accepting Applications"}</div>
-                                    </div>
-                                </CardContent>
-                                <CardFooter>
-                                    {!isRegistered && !isExpired && (
-                                        <Button
-                                            className="w-full bg-white text-primary hover:bg-zinc-100 h-12 font-bold"
-                                            onClick={() => register.mutate(hackathon.id)}
-                                        >
-                                            {register.isPending ? <Loader2 className="animate-spin h-5 w-5" /> : "Register Now"}
-                                        </Button>
-                                    )}
-                                </CardFooter>
-                            </Card>
-
-                            <div className="p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <h4 className="font-bold mb-3 flex items-center gap-2">
-                                    <Info className="h-4 w-4" />
-                                    Need Help?
-                                </h4>
-                                <p className="text-sm text-muted-foreground">
-                                    If you have questions about this event, please reach out to the organizing team through the campus portal.
-                                </p>
+                            <div className="p-6 bg-white/5 rounded-[2rem] border border-white/10 mb-10">
+                                <div className="text-[10px] uppercase tracking-widest font-extrabold text-primary mb-3">Next Step</div>
+                                <div className="text-xl font-bold">{isExpired ? "Review Submissions" : isRegistered ? "Team Brainstorming" : "Registration Open"}</div>
                             </div>
-                        </div>
+
+                            {!isRegistered && !isExpired && (
+                                <Button
+                                    className="w-full bg-white text-black hover:bg-zinc-100 h-14 rounded-2xl font-bold text-lg shadow-xl shadow-white/5"
+                                    onClick={() => register.mutate(hackathon.id)}
+                                    disabled={register.isPending}
+                                >
+                                    {register.isPending ? <Loader2 className="animate-spin h-6 w-6" /> : "Register with 1-Click"}
+                                </Button>
+                            )}
+
+                            {isRegistered && (
+                                <div className="flex items-center justify-center gap-2 p-4 bg-green-500/10 rounded-2xl border border-green-500/20 text-green-500 font-bold">
+                                    <Target className="w-5 h-5" /> You are in the roster!
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <div className="p-8 rounded-[2rem] bg-muted/30 border-2 border-dashed border-muted flex flex-col gap-4">
+                        <h4 className="font-heading font-bold text-lg flex items-center gap-2">
+                            <Zap className="h-5 w-5 text-primary" />
+                            Direct Inquiries
+                        </h4>
+                        <p className="text-muted-foreground font-medium leading-relaxed">
+                            For technical questions or logistical support, please use the official communication channels.
+                        </p>
                     </div>
-                </motion.div>
-            </main>
-        </div >
+                </div>
+            </div>
+        </div>
     );
 }

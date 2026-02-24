@@ -148,9 +148,9 @@ export function registerAuthRoutes(app: Express): void {
   // Student: Complete Profile
   app.post("/api/user/profile", isAuthenticated, async (req: any, res) => {
     try {
-      const { firstName, lastName, department, registerNumber } = req.body;
+      const { firstName, lastName, department, registerNumber, section, yearOfGraduation } = req.body;
 
-      if (!firstName || !lastName || !department || !registerNumber) {
+      if (!firstName || !lastName || !department || !registerNumber || !section || !yearOfGraduation) {
         return res.status(400).json({ message: "All fields are required" });
       }
 
@@ -160,6 +160,8 @@ export function registerAuthRoutes(app: Express): void {
         lastName,
         department,
         registerNumber,
+        section,
+        yearOfGraduation,
         profileCompleted: true,
       } as any);
 

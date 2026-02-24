@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { users } from "@shared/models/auth";
 import { hackathons, registrations, type InsertHackathon, type UpdateHackathonRequest, type Hackathon, type HackathonWithCounts, type Registration } from "@shared/schema";
-import { eq, and, sql, desc, count } from "drizzle-orm";
+import { eq, and, sql, desc, asc, count } from "drizzle-orm";
 
 export interface IStorage {
   // Hackathons
@@ -20,11 +20,12 @@ export interface IStorage {
   // Stats
   getAdminStats(): Promise<any>;
   getStudentStats(studentId: string): Promise<any>;
+  getNotifications(userId: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
   async getHackathons(userId?: string): Promise<HackathonWithCounts[]> {
-    const allHackathons = await db.select().from(hackathons).orderBy(desc(hackathons.registrationDeadline));
+    const allHackathons = await db.select().from(hackathons).orderBy(asc(hackathons.registrationDeadline));
 
     // Get counts and user registration status
     return Promise.all(allHackathons.map(async (h) => {
@@ -127,6 +128,48 @@ export class DatabaseStorage implements IStorage {
       registeredCount: regs.length,
       upcomingSubmissions: regs.filter(r => new Date(r.submissionDeadline) > new Date()).length
     };
+  }
+
+  async getNotifications(userId: string): Promise<any[]> {
+    const notifications: any[] = [];
+
+    // 1. Newly posted hackathons (last 7 days)
+    const recentHackathons = await db.select()
+      .from(hackathons)
+      .where(sql`${hackathons.createdAt} > now() - interval '7 days'`)
+      .orderBy(desc(hackathons.createdAt));
+
+    recentHackathons.forEach(h => {
+      notifications.push({
+        id: `hackathon-${h.id}`,
+        type: 'new_hackathon',
+        title: 'New Hackathon Posted',
+        message: `"${h.title}" is now open for registration!`,
+        timestamp: h.createdAt,
+        data: { hackathonId: h.id }
+      });
+    });
+
+    // 2. User's registrations
+    const userRegistrations = await db.select()
+      .from(registrations)
+      .innerJoin(hackathons, eq(registrations.hackathonId, hackathons.id))
+      .where(eq(registrations.studentId, userId))
+      .orderBy(desc(registrations.timestamp));
+
+    userRegistrations.forEach(r => {
+      notifications.push({
+        id: `reg-${r.registrations.id}`,
+        type: 'registration_success',
+        title: 'Registration Confirmed',
+        message: `You have successfully registered for "${r.hackathons.title}".`,
+        timestamp: r.registrations.timestamp,
+        data: { hackathonId: r.hackathons.id }
+      });
+    });
+
+    // Sort all notifications by timestamp descending
+    return notifications.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 }
 

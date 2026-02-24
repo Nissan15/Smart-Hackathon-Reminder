@@ -4,10 +4,9 @@ import { HackathonCard } from "@/components/HackathonCard";
 import { CreateHackathonDialog } from "@/components/CreateHackathonDialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/hooks/use-auth";
-import { Search, Loader2, Calendar } from "lucide-react";
-import { motion } from "framer-motion";
+import { Search, Loader2, Calendar, Filter, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Hackathons() {
   const { data: hackathons, isLoading } = useHackathons();
@@ -19,80 +18,87 @@ export default function Hackathons() {
 
   const filteredHackathons = hackathons?.filter(h => {
     const matchesSearch = h.title.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === "all" 
-      ? true 
-      : filter === "registered" 
-        ? h.isRegistered 
+    const matchesFilter = filter === "all"
+      ? true
+      : filter === "registered"
+        ? h.isRegistered
         : !h.isRegistered;
     return matchesSearch && matchesFilter;
   });
 
-  // Sort by deadline (soonest first)
   filteredHackathons?.sort((a, b) => new Date(a.registrationDeadline).getTime() - new Date(b.registrationDeadline).getTime());
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-zinc-950">
-      <Navbar />
-      
-      <main className="container py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold font-display tracking-tight text-foreground">Explore Hackathons</h1>
-            <p className="text-muted-foreground mt-1">Discover and register for upcoming events.</p>
-          </div>
-          
-          {isAdmin && <CreateHackathonDialog />}
+    <div className="space-y-10 animate-enter">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-heading font-extrabold tracking-tight">
+            Ecosystem <span className="text-gradient">Events</span>
+          </h1>
+          <p className="text-muted-foreground mt-2 font-medium">Discover opportunities to build and collaborate.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-8 bg-card p-4 rounded-xl shadow-sm border">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search hackathons..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-background border-border/50 focus:border-primary focus:ring-primary/10"
-            />
-          </div>
+        {isAdmin && <CreateHackathonDialog />}
+      </header>
+
+      <div className="bg-card p-6 rounded-[2rem] shadow-xl border-none flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            placeholder="Search events by title or keywords..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-12 bg-muted/50 border-none h-14 rounded-2xl text-base font-medium focus-visible:ring-primary/20"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Filter className="w-5 h-5 text-muted-foreground hidden md:block" />
           <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-background">
-              <SelectValue placeholder="Filter by status" />
+            <SelectTrigger className="w-full md:w-[220px] bg-muted/50 border-none h-14 rounded-2xl font-bold">
+              <SelectValue placeholder="Status Filter" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Events</SelectItem>
-              <SelectItem value="registered">Registered</SelectItem>
-              <SelectItem value="unregistered">Not Registered</SelectItem>
+            <SelectContent className="rounded-2xl border-muted shadow-2xl">
+              <SelectItem value="all" className="rounded-xl font-medium">All Opportunities</SelectItem>
+              <SelectItem value="registered" className="rounded-xl font-medium">Registered Only</SelectItem>
+              <SelectItem value="unregistered" className="rounded-xl font-medium">Available to Join</SelectItem>
             </SelectContent>
           </Select>
         </div>
+      </div>
 
-        {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-32">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground font-bold tracking-widest uppercase text-xs">Synchronizing Ecosystem...</p>
+        </div>
+      ) : filteredHackathons?.length === 0 ? (
+        <div className="text-center py-32 bg-card rounded-[3rem] border-2 border-dashed border-muted relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+          <div className="bg-muted p-6 rounded-3xl w-fit mx-auto mb-6">
+            <Calendar className="h-12 w-12 text-muted-foreground" />
           </div>
-        ) : filteredHackathons?.length === 0 ? (
-          <div className="text-center py-20 bg-card rounded-2xl border border-dashed border-border">
-            <div className="bg-primary/5 p-4 rounded-full w-fit mx-auto mb-4">
-              <Calendar className="h-8 w-8 text-primary/50" />
-            </div>
-            <h3 className="text-lg font-semibold">No hackathons found</h3>
-            <p className="text-muted-foreground">Try adjusting your search or filters.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <h3 className="text-2xl font-heading font-bold mb-2">No events match your criteria</h3>
+          <p className="text-muted-foreground font-medium max-w-sm mx-auto">Try widening your search or changing the filter to explore all available hackathons.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <AnimatePresence mode="popLayout">
             {filteredHackathons?.map((hackathon, idx) => (
               <motion.div
                 key={hackathon.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.3, delay: idx * 0.05 }}
               >
                 <HackathonCard hackathon={hackathon} />
               </motion.div>
             ))}
-          </div>
-        )}
-      </main>
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }

@@ -8,6 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Loader2, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { DEPARTMENTS, SECTIONS, GRADUATION_YEARS } from "@shared/constants";
 
 export default function CompleteProfile() {
     const { user, completeProfile, isCompletingProfile } = useAuth();
@@ -16,6 +24,9 @@ export default function CompleteProfile() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [department, setDepartment] = useState("");
+    const [customDepartment, setCustomDepartment] = useState("");
+    const [section, setSection] = useState("");
+    const [yearOfGraduation, setYearOfGraduation] = useState("");
     const [registerNumber, setRegisterNumber] = useState("");
 
     useEffect(() => {
@@ -26,10 +37,23 @@ export default function CompleteProfile() {
     if (!user) return <Redirect to="/login" />;
     if (user.profileCompleted) return <Redirect to="/" />;
 
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await completeProfile({ firstName, lastName, department, registerNumber });
+            const finalDepartment = department === "Others" ? customDepartment : department;
+            if (department === "Others" && !customDepartment) {
+                throw new Error("Please enter your department");
+            }
+
+            await completeProfile({
+                firstName,
+                lastName,
+                department: finalDepartment,
+                registerNumber,
+                section,
+                yearOfGraduation: parseInt(yearOfGraduation)
+            });
             toast({ title: "Profile Completed", description: "Welcome to the platform!" });
         } catch (error: any) {
             toast({
@@ -82,13 +106,64 @@ export default function CompleteProfile() {
 
                             <div className="space-y-2">
                                 <Label htmlFor="department">Department</Label>
-                                <Input
-                                    id="department"
-                                    placeholder="e.g. Computer Science"
-                                    value={department}
-                                    onChange={(e) => setDepartment(e.target.value)}
-                                    required
-                                />
+                                <Select value={department} onValueChange={setDepartment} required>
+                                    <SelectTrigger id="department" className="bg-zinc-50/50 dark:bg-zinc-900/50">
+                                        <SelectValue placeholder="Select Department" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {DEPARTMENTS.map((dept) => (
+                                            <SelectItem key={dept} value={dept}>
+                                                {dept}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {department === "Others" && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="customDepartment">Enter Your Department</Label>
+                                    <Input
+                                        id="customDepartment"
+                                        placeholder="e.g. Mechanical Engineering"
+                                        value={customDepartment}
+                                        onChange={(e) => setCustomDepartment(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="section">Section</Label>
+                                    <Select value={section} onValueChange={setSection} required>
+                                        <SelectTrigger id="section" className="bg-zinc-50/50 dark:bg-zinc-900/50">
+                                            <SelectValue placeholder="Select" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {SECTIONS.map((sec) => (
+                                                <SelectItem key={sec} value={sec}>
+                                                    {sec}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="yearOfGraduation">Graduation Year</Label>
+                                    <Select value={yearOfGraduation} onValueChange={setYearOfGraduation} required>
+                                        <SelectTrigger id="yearOfGraduation" className="bg-zinc-50/50 dark:bg-zinc-900/50">
+                                            <SelectValue placeholder="Select" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {GRADUATION_YEARS.map((year) => (
+                                                <SelectItem key={year} value={year}>
+                                                    {year}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
 
                             <div className="space-y-2">

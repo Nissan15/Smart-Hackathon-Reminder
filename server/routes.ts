@@ -9,6 +9,7 @@ import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 import bcrypt from "bcryptjs";
+import { sendEmail } from "./email";
 
 async function seedDatabase() {
   const existingUsers = await db.select().from(users);
@@ -180,6 +181,56 @@ export async function registerRoutes(
       const input = api.registrations.create.input.parse(req.body);
       const userId = (req as any).user.id;
       const reg = await storage.registerForHackathon(userId, input.hackathonId);
+
+      // Send confirmation email
+      try {
+        const [user] = await db.select().from(users).where(eq(users.id, userId));
+        const hackathon = await storage.getHackathon(input.hackathonId);
+
+        console.log(`[Registration] Processing email for student: ${user?.email || 'N/A'}, hackathon: ${hackathon?.title || 'N/A'}`);
+
+        if (user && user.email && hackathon) {
+          console.log(`[Registration] Sending confirmation for ${hackathon.title} to ${user.email}`);
+          await sendEmail(
+            user.email,
+            `Registration Confirmed: ${hackathon.title}`,
+            `
+            <div class="badge">Success</div>
+            <h2>Registration Confirmed!</h2>
+            <p>Hi <strong>${user.firstName || 'Student'}</strong>,</p>
+            <p>Great news! You have successfully registered for <strong>${hackathon.title}</strong>. We've reserved your spot in this event.</p>
+            
+            <div class="divider"></div>
+            
+            <p style="margin-bottom: 8px;"><strong>Event Details:</strong></p>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Registration Deadline:</td>
+                <td style="padding: 8px 0; font-weight: 600; text-align: right;">${new Date(hackathon.registrationDeadline).toLocaleDateString(undefined, { dateStyle: 'long' })}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Submission Deadline:</td>
+                <td style="padding: 8px 0; font-weight: 600; text-align: right;">${new Date(hackathon.submissionDeadline).toLocaleDateString(undefined, { dateStyle: 'long' })}</td>
+              </tr>
+            </table>
+            
+            <div class="divider"></div>
+            
+            <p>Ready to start building? Check the dashboard for more details and guidelines.</p>
+            <div style="text-align: center;">
+              <a href="${process.env.APP_URL || 'http://localhost:5000'}/hackathons/${hackathon.id}" class="button">View Hackathon Details</a>
+            </div>
+            
+            <p style="margin-top: 32px; font-size: 14px;">Good luck with your project! We can't wait to see what you create.</p>
+            `
+          );
+        } else {
+          console.warn(`[Registration] Missing required data for email. User found: ${!!user}, Email: ${user?.email}, Hackathon: ${!!hackathon}`);
+        }
+      } catch (emailError) {
+        console.error("[Registration] Email notification failed:", emailError);
+      }
+
       res.status(201).json(reg);
     } catch (err) {
       res.status(400).json({ message: "Bad request" });
@@ -207,6 +258,29 @@ export async function registerRoutes(
   });
 
 
+
+  app.get("/api/test-email", isAuthenticated, async (req: any, res) => {
+    try {
+      const success = await sendEmail(
+        req.user.email,
+        "SmartHack Email Test",
+        "<h3>Test Success!</h3><p>If you see this, your SMTP configuration is working correctly.</p>"
+      );
+      if (success) {
+        res.json({ message: "Test email sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send test email. Check server logs." });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Error in test-email endpoint", error: String(error) });
+    }
+  });
+
+  app.get(api.notifications.list.path, isAuthenticated, async (req, res) => {
+    const userId = (req as any).user.id;
+    const notifications = await storage.getNotifications(userId);
+    res.json(notifications);
+  });
 
   return httpServer;
 }

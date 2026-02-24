@@ -132,6 +132,7 @@ export function useRegisterForHackathon() {
       queryClient.invalidateQueries({ queryKey: [api.hackathons.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.registrations.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.stats.dashboard.path] });
+      queryClient.invalidateQueries({ queryKey: [api.notifications.list.path] });
       toast({ title: "Registered!", description: "You are now participating in this hackathon." });
     },
     onError: (error: Error) => {
@@ -158,6 +159,7 @@ export function useUnregisterFromHackathon() {
       queryClient.invalidateQueries({ queryKey: [api.hackathons.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.registrations.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.stats.dashboard.path] });
+      queryClient.invalidateQueries({ queryKey: [api.notifications.list.path] });
       toast({ title: "Unregistered", description: "You have been removed from this hackathon." });
     },
     onError: (error: Error) => {
@@ -174,6 +176,18 @@ export function useStats() {
       if (!res.ok) throw new Error("Failed to fetch dashboard stats");
       return await res.json();
     },
+  });
+}
+
+export function useNotifications() {
+  return useQuery({
+    queryKey: [api.notifications.list.path],
+    queryFn: async () => {
+      const res = await fetch(api.notifications.list.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch notifications");
+      return await res.json() as any[];
+    },
+    refetchInterval: 30000,
   });
 }
 

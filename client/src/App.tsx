@@ -13,14 +13,17 @@ import CompleteProfile from "@/pages/CompleteProfile";
 import Profile from "@/pages/Profile";
 import HackathonAnalytics from "@/pages/HackathonAnalytics";
 import HackathonDetails from "@/pages/HackathonDetails";
+import AdminUsers from "@/pages/AdminUsers";
 import NotFound from "@/pages/not-found";
+import LandingPage from "@/pages/LandingPage";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -35,19 +38,25 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     return <Redirect to="/complete-profile" />;
   }
 
-  return <Component />;
+  return (
+    <DashboardLayout>
+      <Component />
+    </DashboardLayout>
+  );
 }
 
 function Router() {
+  const { user } = useAuth();
+
   return (
     <Switch>
+      <Route path="/">
+        {user ? <ProtectedRoute component={Dashboard} /> : <LandingPage />}
+      </Route>
       <Route path="/login" component={Login} />
       <Route path="/complete-profile" component={CompleteProfile} />
 
       {/* Protected Routes */}
-      <Route path="/">
-        <ProtectedRoute component={Dashboard} />
-      </Route>
       <Route path="/hackathons">
         <ProtectedRoute component={Hackathons} />
       </Route>
@@ -60,6 +69,9 @@ function Router() {
       <Route path="/admin/hackathons/:id">
         <ProtectedRoute component={HackathonAnalytics} />
       </Route>
+      <Route path="/admin/users">
+        <ProtectedRoute component={AdminUsers} />
+      </Route>
 
       {/* Fallback */}
       <Route component={NotFound} />
@@ -67,13 +79,17 @@ function Router() {
   );
 }
 
+import { ThemeProvider } from "./hooks/use-theme";
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <ThemeProvider defaultTheme="light" storageKey="asset-manager-theme">
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

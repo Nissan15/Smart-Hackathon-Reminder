@@ -4,6 +4,9 @@ import { Trophy, Users, Calendar, AlertCircle, Shield } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
 import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 
 export function DashboardStats() {
   const { data: stats, isLoading } = useStats();
@@ -20,54 +23,90 @@ export function DashboardStats() {
   if (!stats) return null;
 
   const cards = isAdmin ? [
-    { title: "Total Hackathons", value: stats.totalHackathons || 0, icon: Trophy, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { title: "Active Students", value: stats.totalStudents || 0, icon: Users, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { title: "Platform Users", value: stats.totalUsers || 0, icon: Shield, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { title: "Total Registrations", value: stats.totalRegistrations || 0, icon: Calendar, color: "text-orange-500", bg: "bg-orange-500/10" },
+    { title: "Total Hackathons", value: stats.totalHackathons || 0, icon: Trophy, gradient: "from-indigo-500 to-purple-600" },
+    { title: "Active Students", value: stats.totalStudents || 0, icon: Users, gradient: "from-cyan-500 to-blue-600" },
+    { title: "Platform Users", value: stats.totalUsers || 0, icon: Shield, gradient: "from-pink-500 to-rose-600" },
+    { title: "Registrations", value: stats.totalRegistrations || 0, icon: Calendar, gradient: "from-orange-500 to-yellow-600" },
   ] : [
-    { title: "My Hackathons", value: stats.registeredCount || 0, icon: Trophy, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { title: "Upcoming Deadlines", value: stats.upcomingDeadlines || 0, icon: AlertCircle, color: "text-orange-500", bg: "bg-orange-500/10" },
-    { title: "Available Events", value: stats.totalHackathons || 0, icon: Calendar, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { title: "Completion Rate", value: "100%", icon: Users, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { title: "My Hackathons", value: stats.registeredCount || 0, icon: Trophy, gradient: "from-indigo-500 to-purple-600" },
+    { title: "Upcoming Deadlines", value: stats.upcomingDeadlines || 0, icon: AlertCircle, gradient: "from-orange-500 to-rose-600" },
+    { title: "Available Events", value: stats.totalHackathons || 0, icon: Calendar, gradient: "from-cyan-500 to-blue-600" },
+    { title: "Completion Rate", value: "92%", icon: Users, gradient: "from-emerald-500 to-teal-600" },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-8 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {cards.map((card, idx) => (
-          <Card key={idx} className="border-none shadow-md hover:shadow-lg transition-all duration-200">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {card.title}
-              </CardTitle>
-              <div className={`p-2 rounded-full ${card.bg}`}>
-                <card.icon className={`h-4 w-4 ${card.color}`} />
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: idx * 0.1 }}
+          >
+            <Card className={cn(
+              "border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden relative group",
+              "bg-gradient-to-br transition-all duration-300",
+              card.gradient
+            )}>
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform duration-300">
+                <card.icon size={80} />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{card.value}</div>
-            </CardContent>
-          </Card>
+              <CardHeader className="pb-2 relative z-10 text-white/80">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold uppercase tracking-wider">{card.title}</span>
+                  <card.icon size={18} className="text-white" />
+                </div>
+              </CardHeader>
+              <CardContent className="relative z-10">
+                <div className="text-3xl font-extrabold text-white tracking-tight">{card.value}</div>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
       </div>
 
       {isAdmin && stats.registrationsByHackathon && (
-        <Card className="col-span-4 border-none shadow-md">
-          <CardHeader>
-            <CardTitle>Registrations per Hackathon</CardTitle>
+        <Card className="border-none shadow-xl bg-card transition-all duration-300 hover:shadow-2xl rounded-2xl overflow-hidden">
+          <CardHeader className="border-b bg-muted/30">
+            <CardTitle className="text-lg font-heading font-bold">Event Participation Overview</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[350px] pt-8">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats.registrationsByHackathon}>
-                <XAxis dataKey="title" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-                <Tooltip
-                  cursor={{ fill: 'transparent' }}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="title"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  stroke="hsl(var(--muted-foreground))"
                 />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                <YAxis
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  stroke="hsl(var(--muted-foreground))"
+                  tickFormatter={(value) => `${value}`}
+                />
+                <Tooltip
+                  cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
+                  contentStyle={{
+                    borderRadius: '16px',
+                    border: 'none',
+                    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+                    backgroundColor: 'hsl(var(--card))',
+                    fontFamily: 'var(--font-heading)'
+                  }}
+                />
+                <Bar dataKey="count" radius={[8, 8, 0, 0]} fill="url(#barGradient)">
                   {stats.registrationsByHackathon.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#10b981' : '#3b82f6'} />
+                    <Cell key={`cell-${index}`} />
                   ))}
                 </Bar>
               </BarChart>
