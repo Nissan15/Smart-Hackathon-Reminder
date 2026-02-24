@@ -9,8 +9,8 @@ async function testEmail() {
     const user = process.env.SMTP_USER?.trim();
     const pass = process.env.SMTP_PASS?.replace(/\s/g, "");
     const host = process.env.SMTP_HOST?.trim() || "smtp.gmail.com";
-    const port = 587;
-    const secure = false;
+    const port = parseInt(process.env.SMTP_PORT || "587");
+    const secure = process.env.SMTP_SECURE === "true";
 
     console.log("--- SMTP DIAGNOSTICS ---");
     console.log(`User: ${user}`);
