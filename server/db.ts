@@ -5,9 +5,9 @@ import * as schema from "@shared/schema";
 const { Pool } = pg;
 
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+  console.error("❌ CRITICAL ERROR: DATABASE_URL is not set.");
+  console.error("Ensure you have added DATABASE_URL to your hosting provider's Environment Variables / Secrets.");
+  process.exit(1);
 }
 
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });

@@ -282,5 +282,23 @@ export async function registerRoutes(
     res.json(notifications);
   });
 
+  // Cron trigger endpoint
+  app.get("/api/cron/reminders", async (req, res) => {
+    // Check for cron secret if configured
+    const cronSecret = req.headers["x-cron-secret"];
+    if (process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const { runDeadlineReminders } = await import("./cron");
+      await runDeadlineReminders();
+      res.json({ message: "Cron job triggered successfully" });
+    } catch (error) {
+      console.error("Cron trigger endpoint error:", error);
+      res.status(500).json({ message: "Cron job failed", error: String(error) });
+    }
+  });
+
   return httpServer;
 }
