@@ -20,7 +20,21 @@ import {
     ArrowUpAZ,
     ArrowDownAZ,
     ChevronDown,
+    MapPin,
+    ExternalLink,
+    AlertCircle,
+    Activity,
+    Clock,
 } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { useUserRegistrations } from "@/hooks/use-users";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -56,6 +70,9 @@ export default function AdminUsers() {
     const [searchQuery, setSearchQuery] = useState("");
     const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
     const [showFilters, setShowFilters] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<any | null>(null);
+
+    const { data: userRegs, isLoading: isLoadingRegs } = useUserRegistrations(selectedUser?.id);
 
     const activeFilterCount = useMemo(() => {
         let n = 0;
@@ -323,7 +340,11 @@ export default function AdminUsers() {
                                     </div>
                                 </td></tr>
                             ) : filteredUsers.map((u) => (
-                                <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                                <tr
+                                    key={u.id}
+                                    className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer"
+                                    onClick={() => setSelectedUser(u)}
+                                >
                                     <td className="px-6 py-5">
                                         <div className="flex items-center gap-4">
                                             <div className="relative">
@@ -382,7 +403,7 @@ export default function AdminUsers() {
                                             {u.role}
                                         </Badge>
                                     </td>
-                                    <td className="px-6 py-5 text-right">
+                                    <td className="px-6 py-5 text-right" onClick={(e) => e.stopPropagation()}>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
@@ -415,6 +436,129 @@ export default function AdminUsers() {
                     </table>
                 </div>
             </motion.div>
+
+            {/* User Detail Dialog */}
+            <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+                <DialogContent className="max-w-2xl rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
+                    {selectedUser && (
+                        <div className="flex flex-col max-h-[90vh]">
+                            <div className="bg-gradient-to-br from-indigo-600 to-violet-700 p-8 text-white relative">
+                                <div className="relative z-10 flex items-center gap-6">
+                                    <div className="w-24 h-24 rounded-3xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center overflow-hidden shadow-inner">
+                                        {selectedUser.profileImageUrl ? (
+                                            <img src={selectedUser.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <UserCircle size={48} className="text-white/80" />
+                                        )}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <h2 className="text-2xl font-bold capitalize">{selectedUser.firstName} {selectedUser.lastName}</h2>
+                                            <Badge variant="secondary" className="bg-white/20 text-white border-white/20 hover:bg-white/30 capitalize">
+                                                {selectedUser.role}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-white/70 flex items-center gap-2 text-sm">
+                                            <Mail size={14} /> {selectedUser.email}
+                                        </p>
+                                        <div className="flex gap-4 mt-4 text-xs font-semibold uppercase tracking-wider text-indigo-100">
+                                            <div className="bg-black/20 px-3 py-1 rounded-lg flex items-center gap-2">
+                                                <Activity size={12} />
+                                                Registrations: {userRegs?.length || 0}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* Decorative elements */}
+                                <div className="absolute top-0 right-0 p-8 opacity-10">
+                                    <Users size={120} />
+                                </div>
+                            </div>
+
+                            <ScrollArea className="flex-1">
+                                <div className="p-8 space-y-8">
+                                    {/* Detailed Info Section */}
+                                    <div className="grid grid-cols-2 gap-8">
+                                        <div className="space-y-4">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Academic Details</p>
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                                                    <Building2 size={16} className="text-indigo-500" />
+                                                    <span className="font-semibold">Dept:</span> {selectedUser.department || "N/A"}
+                                                </div>
+                                                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                                                    <Hash size={16} className="text-indigo-500" />
+                                                    <span className="font-semibold">Reg No:</span> {selectedUser.registerNumber || "N/A"}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Batch Info</p>
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                                                    <Layers size={16} className="text-indigo-500" />
+                                                    <span className="font-semibold">Section:</span> {selectedUser.section || "N/A"}
+                                                </div>
+                                                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                                                    <GraduationCap size={16} className="text-indigo-500" />
+                                                    <span className="font-semibold">Graduation:</span> {selectedUser.yearOfGraduation || "N/A"}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Hackathons Section */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Registered Hackathons</p>
+                                            {userRegs && userRegs.length > 0 && <Badge variant="outline" className="text-indigo-600 border-indigo-200">{userRegs.length}</Badge>}
+                                        </div>
+
+                                        {isLoadingRegs ? (
+                                            <div className="space-y-3">
+                                                {[1, 2].map(i => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}
+                                            </div>
+                                        ) : userRegs && userRegs.length > 0 ? (
+                                            <div className="grid gap-3">
+                                                {userRegs.map((h: any) => (
+                                                    <div key={h.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between group hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600">
+                                                                <Calendar size={20} />
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-slate-900 dark:text-white text-sm group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{h.title}</p>
+                                                                <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+                                                                    <Clock size={10} />
+                                                                    Ends: {new Date(h.submissionDeadline).toLocaleDateString()}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <Button size="sm" variant="ghost" className="rounded-xl h-8 text-[11px] font-bold uppercase tracking-wider text-indigo-600" asChild>
+                                                            <a href={`/admin/hackathons/${h.id}`}>View Analytics</a>
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center py-8 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                                                <AlertCircle className="w-8 h-8 text-slate-300 mb-2" />
+                                                <p className="text-xs font-semibold text-slate-500">No active registrations found.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </ScrollArea>
+
+                            <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+                                <Button onClick={() => setSelectedUser(null)} variant="secondary" className="rounded-xl font-bold uppercase tracking-widest text-[10px] px-6">
+                                    Close
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -53,6 +53,19 @@ export function useDeleteUser() {
     });
 }
 
+export function useSendReminders() {
+    return useMutation({
+        mutationFn: async (id: number) => {
+            const res = await fetch(`/api/admin/hackathons/${id}/remind`, {
+                method: "POST",
+                credentials: "include",
+            });
+            if (!res.ok) throw new Error("Failed to send reminders");
+            return await res.json();
+        },
+    });
+}
+
 export function useHackathonAnalytics(id: number) {
     return useQuery({
         queryKey: ["/api/admin/hackathons", id, "analytics"],
@@ -62,5 +75,16 @@ export function useHackathonAnalytics(id: number) {
             return await res.json();
         },
         enabled: !!id,
+    });
+}
+export function useUserRegistrations(userId: string) {
+    return useQuery({
+        queryKey: ["/api/admin/users", userId, "registrations"],
+        queryFn: async () => {
+            const res = await fetch(`/api/admin/users/${userId}/registrations`, { credentials: "include" });
+            if (!res.ok) throw new Error("Failed to fetch user registrations");
+            return await res.json() as any[];
+        },
+        enabled: !!userId,
     });
 }

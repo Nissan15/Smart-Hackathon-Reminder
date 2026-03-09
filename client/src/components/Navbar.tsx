@@ -22,6 +22,7 @@ export function Navbar() {
     switch (path) {
       case "/": return "Dashboard";
       case "/hackathons": return "Hackathons";
+      case "/past-hackathons": return "Past Hackathons";
       case "/registered": return "Registered";
       case "/deadlines": return "Deadlines";
       case "/profile": return "Profile";
@@ -58,8 +59,12 @@ export function Navbar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div className="flex items-center gap-3 cursor-pointer group px-2 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                {user?.email?.[0].toUpperCase() || "U"}
+              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-sm shadow-md overflow-hidden">
+                {user?.profileImageUrl ? (
+                  <img src={user.profileImageUrl} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  user?.email?.[0].toUpperCase() || "U"
+                )}
               </div>
               <div className="hidden sm:block text-left">
                 <p className="text-sm font-bold leading-none text-slate-900 dark:text-white mb-0.5">

@@ -3,7 +3,7 @@ import { Calendar, Clock, Trophy, Users, Eye, ArrowRight, Sparkles, Trash2, Edit
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { useRegisterForHackathon, useUnregisterFromHackathon, useDeleteHackathon } from "@/hooks/use-hackathons";
+import { useRegisterForHackathon, useDeleteHackathon } from "@/hooks/use-hackathons";
 import { useAuth } from "@/hooks/use-auth";
 import { HackathonWithCounts } from "@shared/schema";
 import { useState } from "react";

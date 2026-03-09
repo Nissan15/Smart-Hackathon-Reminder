@@ -88,6 +88,17 @@ export const api = {
       }
     }
   },
+  submissions: {
+    create: {
+      method: 'POST' as const,
+      path: '/api/submissions' as const,
+      input: z.object({ hackathonId: z.number() }),
+      responses: {
+        201: z.any(),
+        400: errorSchemas.validation,
+      }
+    }
+  },
   notifications: {
     list: {
       method: 'GET' as const,

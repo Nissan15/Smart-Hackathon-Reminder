@@ -1,7 +1,8 @@
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { useRegisterForHackathon, useUnregisterFromHackathon } from "@/hooks/use-hackathons";
+import { useRegisterForHackathon, useSubmitIdea, useHackathon } from "@/hooks/use-hackathons";
+import { api } from "@shared/routes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,17 +28,10 @@ export default function HackathonDetails() {
     const { user } = useAuth();
     const hackathonId = Number(id);
 
-    const { data: hackathon, isLoading, error } = useQuery({
-        queryKey: ["/api/hackathons", hackathonId],
-        queryFn: async () => {
-            const res = await fetch(`/api/hackathons/${hackathonId}`, { credentials: "include" });
-            if (!res.ok) throw new Error("Failed to fetch hackathon details");
-            return await res.json();
-        },
-    });
+    const { data: hackathon, isLoading, error } = useHackathon(hackathonId);
 
     const register = useRegisterForHackathon();
-    const unregister = useUnregisterFromHackathon();
+    const submitIdea = useSubmitIdea();
 
     if (isLoading) {
         return (
@@ -66,8 +60,12 @@ export default function HackathonDetails() {
     const registrationDeadline = new Date(hackathon.registrationDeadline);
     const submissionDeadline = new Date(hackathon.submissionDeadline);
     const now = new Date();
-    const isExpired = registrationDeadline < now;
+    now.setHours(0, 0, 0, 0);
+    const actualNow = new Date();
+    const isExpired = registrationDeadline < actualNow;
+    const isSubmissionExpired = submissionDeadline < actualNow;
     const isRegistered = hackathon.isRegistered;
+    const isSubmitted = hackathon.isSubmitted;
 
     return (
         <div className="space-y-10 animate-enter">
@@ -87,6 +85,11 @@ export default function HackathonDetails() {
                                 <CheckCircle2 className="h-4 w-4" /> Participation Confirmed
                             </span>
                         )}
+                        {isSubmitted && (
+                            <span className="text-sm text-indigo-500 font-bold flex items-center gap-1">
+                                <Sparkles className="h-4 w-4" /> Idea Submitted
+                            </span>
+                        )}
                     </div>
                     <h1 className="text-5xl font-heading font-extrabold tracking-tight">
                         {hackathon.title}
@@ -99,15 +102,41 @@ export default function HackathonDetails() {
                 <div className="flex flex-col sm:row gap-3 min-w-[240px]">
                     <AnimatePresence mode="wait">
                         {isRegistered ? (
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                className="h-14 rounded-2xl border-2 border-rose-500/20 text-rose-500 hover:bg-rose-50 font-bold text-lg"
-                                onClick={() => unregister.mutate(hackathon.id)}
-                                disabled={unregister.isPending || isExpired}
-                            >
-                                {unregister.isPending ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Unregister"}
-                            </Button>
+                            <div className="flex flex-col gap-3">
+                                {!isSubmitted && !isSubmissionExpired && (
+                                    <Button
+                                        size="lg"
+                                        className="h-14 rounded-2xl btn-gradient font-bold text-lg shadow-xl shadow-primary/25"
+                                        onClick={() => submitIdea.mutate(hackathon.id)}
+                                        disabled={submitIdea.isPending}
+                                    >
+                                        {submitIdea.isPending ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Submit Idea"}
+                                        {!submitIdea.isPending && <CheckCircle2 className="ml-2 w-5 h-5" />}
+                                    </Button>
+                                )}
+
+                                {isSubmitted && (
+                                    <Button
+                                        disabled
+                                        size="lg"
+                                        className="h-14 rounded-2xl bg-indigo-500/10 text-indigo-500 border-2 border-indigo-500/20 font-bold text-lg"
+                                    >
+                                        Idea Submitted
+                                    </Button>
+                                )}
+
+                                {isSubmissionExpired && !isSubmitted && (
+                                    <Button
+                                        disabled
+                                        size="lg"
+                                        className="h-14 rounded-2xl bg-muted text-muted-foreground border-2 border-muted font-bold text-lg"
+                                    >
+                                        Submissions Closed
+                                    </Button>
+                                )}
+
+
+                            </div>
                         ) : (
                             <Button
                                 size="lg"

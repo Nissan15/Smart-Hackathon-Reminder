@@ -12,18 +12,14 @@ export default function Hackathons() {
   const { data: hackathons, isLoading } = useHackathons();
   const { user } = useAuth();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
 
   const isAdmin = user?.role === 'admin' || (user as any)?.isAdmin;
+  const now = new Date();
 
   const filteredHackathons = hackathons?.filter(h => {
     const matchesSearch = h.title.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === "all"
-      ? true
-      : filter === "registered"
-        ? h.isRegistered
-        : !h.isRegistered;
-    return matchesSearch && matchesFilter;
+    const isFuture = new Date(h.registrationDeadline) > now;
+    return matchesSearch && isFuture;
   });
 
   filteredHackathons?.sort((a, b) => new Date(a.registrationDeadline).getTime() - new Date(b.registrationDeadline).getTime());
@@ -35,7 +31,7 @@ export default function Hackathons() {
           <h1 className="text-4xl font-heading font-extrabold tracking-tight">
             Ecosystem <span className="text-gradient">Events</span>
           </h1>
-          <p className="text-muted-foreground mt-2 font-medium">Discover opportunities to build and collaborate.</p>
+          <p className="text-muted-foreground mt-2 font-medium">Discover future opportunities to build and collaborate.</p>
         </div>
 
         {isAdmin && <CreateHackathonDialog />}
@@ -51,20 +47,6 @@ export default function Hackathons() {
             className="pl-12 bg-muted/50 border-none h-14 rounded-2xl text-base font-medium focus-visible:ring-primary/20"
           />
         </div>
-
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <Filter className="w-5 h-5 text-muted-foreground hidden md:block" />
-          <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-full md:w-[220px] bg-muted/50 border-none h-14 rounded-2xl font-bold">
-              <SelectValue placeholder="Status Filter" />
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl border-muted shadow-2xl">
-              <SelectItem value="all" className="rounded-xl font-medium">All Opportunities</SelectItem>
-              <SelectItem value="registered" className="rounded-xl font-medium">Registered Only</SelectItem>
-              <SelectItem value="unregistered" className="rounded-xl font-medium">Available to Join</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       {isLoading ? (
@@ -78,8 +60,8 @@ export default function Hackathons() {
           <div className="bg-muted p-6 rounded-3xl w-fit mx-auto mb-6">
             <Calendar className="h-12 w-12 text-muted-foreground" />
           </div>
-          <h3 className="text-2xl font-heading font-bold mb-2">No events match your criteria</h3>
-          <p className="text-muted-foreground font-medium max-w-sm mx-auto">Try widening your search or changing the filter to explore all available hackathons.</p>
+          <h3 className="text-2xl font-heading font-bold mb-2">No upcoming events found</h3>
+          <p className="text-muted-foreground font-medium max-w-sm mx-auto">Check back later for new opportunities or browse past hackathons.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

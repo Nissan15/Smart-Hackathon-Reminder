@@ -1,12 +1,12 @@
 import { db } from "./db";
 import { users } from "@shared/models/auth";
-import { hackathons, registrations, type InsertHackathon, type UpdateHackathonRequest, type Hackathon, type HackathonWithCounts, type Registration } from "@shared/schema";
+import { hackathons, registrations, hackathonSubmissions, type InsertHackathon, type UpdateHackathonRequest, type Hackathon, type HackathonWithCounts, type Registration, type HackathonSubmission } from "@shared/schema";
 import { eq, and, sql, desc, asc, count } from "drizzle-orm";
 
 export interface IStorage {
   // Hackathons
   getHackathons(userId?: string): Promise<HackathonWithCounts[]>;
-  getHackathon(id: number): Promise<Hackathon | undefined>;
+  getHackathon(id: number, userId?: string): Promise<HackathonWithCounts | undefined>;
   createHackathon(hackathon: InsertHackathon & { createdBy: string }): Promise<Hackathon>;
   updateHackathon(id: number, updates: UpdateHackathonRequest): Promise<Hackathon>;
   deleteHackathon(id: number): Promise<void>;
@@ -16,6 +16,10 @@ export interface IStorage {
   getStudentRegistrations(studentId: string): Promise<Hackathon[]>;
   registerForHackathon(studentId: string, hackathonId: number): Promise<Registration>;
   unregisterFromHackathon(studentId: string, hackathonId: number): Promise<void>;
+
+  // Submissions
+  getSubmission(userId: string, hackathonId: number): Promise<HackathonSubmission | undefined>;
+  submitIdea(userId: string, hackathonId: number): Promise<HackathonSubmission>;
 
   // Stats
   getAdminStats(): Promise<any>;
@@ -27,27 +31,51 @@ export class DatabaseStorage implements IStorage {
   async getHackathons(userId?: string): Promise<HackathonWithCounts[]> {
     const allHackathons = await db.select().from(hackathons).orderBy(asc(hackathons.registrationDeadline));
 
-    // Get counts and user registration status
+    // Get counts and user registration/submission status
     return Promise.all(allHackathons.map(async (h) => {
       const [regCount] = await db.select({ count: count() }).from(registrations).where(eq(registrations.hackathonId, h.id));
 
       let isRegistered = false;
+      let isSubmitted = false;
       if (userId) {
         const [reg] = await db.select().from(registrations).where(and(eq(registrations.hackathonId, h.id), eq(registrations.studentId, userId)));
         isRegistered = !!reg;
+
+        const [sub] = await db.select().from(hackathonSubmissions).where(and(eq(hackathonSubmissions.hackathonId, h.id), eq(hackathonSubmissions.userId, userId)));
+        isSubmitted = !!sub;
       }
 
       return {
         ...h,
         registrationCount: Number(regCount.count),
-        isRegistered
+        isRegistered,
+        isSubmitted
       };
     }));
   }
 
-  async getHackathon(id: number): Promise<Hackathon | undefined> {
+  async getHackathon(id: number, userId?: string): Promise<HackathonWithCounts | undefined> {
     const [h] = await db.select().from(hackathons).where(eq(hackathons.id, id));
-    return h;
+    if (!h) return undefined;
+
+    const [regCount] = await db.select({ count: count() }).from(registrations).where(eq(registrations.hackathonId, h.id));
+
+    let isRegistered = false;
+    let isSubmitted = false;
+    if (userId) {
+      const [reg] = await db.select().from(registrations).where(and(eq(registrations.hackathonId, h.id), eq(registrations.studentId, userId)));
+      isRegistered = !!reg;
+
+      const [sub] = await db.select().from(hackathonSubmissions).where(and(eq(hackathonSubmissions.hackathonId, h.id), eq(hackathonSubmissions.userId, userId)));
+      isSubmitted = !!sub;
+    }
+
+    return {
+      ...h,
+      registrationCount: Number(regCount.count),
+      isRegistered,
+      isSubmitted
+    };
   }
 
   async createHackathon(hackathon: InsertHackathon & { createdBy: string }): Promise<Hackathon> {
@@ -108,6 +136,16 @@ export class DatabaseStorage implements IStorage {
     await db.delete(registrations).where(and(eq(registrations.studentId, studentId), eq(registrations.hackathonId, hackathonId)));
   }
 
+  async getSubmission(userId: string, hackathonId: number): Promise<HackathonSubmission | undefined> {
+    const [sub] = await db.select().from(hackathonSubmissions).where(and(eq(hackathonSubmissions.userId, userId), eq(hackathonSubmissions.hackathonId, hackathonId)));
+    return sub;
+  }
+
+  async submitIdea(userId: string, hackathonId: number): Promise<HackathonSubmission> {
+    const [sub] = await db.insert(hackathonSubmissions).values({ userId, hackathonId }).returning();
+    return sub;
+  }
+
   async getAdminStats(): Promise<any> {
     const [hCount] = await db.select({ count: count() }).from(hackathons);
     const [sCount] = await db.select({ count: count() }).from(users).where(eq(users.role, 'student'));
@@ -124,9 +162,14 @@ export class DatabaseStorage implements IStorage {
 
   async getStudentStats(studentId: string): Promise<any> {
     const regs = await this.getStudentRegistrations(studentId);
+    const [hCount] = await db.select({ count: count() }).from(hackathons);
+    const now = new Date();
+
     return {
       registeredCount: regs.length,
-      upcomingSubmissions: regs.filter(r => new Date(r.submissionDeadline) > new Date()).length
+      upcomingDeadlines: regs.filter(r => new Date(r.submissionDeadline) > now).length,
+      totalHackathons: Number(hCount.count),
+      missedDeadlines: regs.filter(r => new Date(r.submissionDeadline) < now).length
     };
   }
 

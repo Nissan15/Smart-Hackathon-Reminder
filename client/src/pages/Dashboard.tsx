@@ -92,7 +92,7 @@ export default function Dashboard() {
     },
     {
       label: "Missed Deadlines",
-      value: "0", // Could be calculated if needed
+      value: stats?.missedDeadlines || 0,
       icon: AlertCircle,
       delay: 0.4
     }

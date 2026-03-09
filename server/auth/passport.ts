@@ -23,7 +23,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // Set to false for local dev without HTTPS
       maxAge: sessionTtl,
     },
   });
@@ -106,19 +106,6 @@ export async function setupAuth(app: Express) {
     } catch (error) {
       cb(error);
     }
-  });
-
-  // Re-exporting legacy login route to prevent total breakage if called, 
-  // but it should ideally be handled by the new POST /api/login
-  app.get("/api/login", (req, res) => {
-    res.status(400).send("Please use POST /api/login with email and password");
-  });
-
-  app.get("/api/logout", (req, res, next) => {
-    req.logout((err) => {
-      if (err) return next(err);
-      res.redirect("/login");
-    });
   });
 }
 

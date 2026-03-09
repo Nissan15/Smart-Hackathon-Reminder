@@ -16,6 +16,9 @@ import HackathonDetails from "@/pages/HackathonDetails";
 import AdminUsers from "@/pages/AdminUsers";
 import NotFound from "@/pages/not-found";
 import LandingPage from "@/pages/LandingPage";
+import RegisteredHackathons from "@/pages/RegisteredHackathons";
+import Deadlines from "@/pages/Deadlines";
+import PastHackathons from "@/pages/PastHackathons";
 import { DashboardLayout } from "@/components/DashboardLayout";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -59,6 +62,15 @@ function Router() {
       {/* Protected Routes */}
       <Route path="/hackathons">
         <ProtectedRoute component={Hackathons} />
+      </Route>
+      <Route path="/past-hackathons">
+        <ProtectedRoute component={PastHackathons} />
+      </Route>
+      <Route path="/registered">
+        <ProtectedRoute component={RegisteredHackathons} />
+      </Route>
+      <Route path="/deadlines">
+        <ProtectedRoute component={Deadlines} />
       </Route>
       <Route path="/hackathons/:id">
         <ProtectedRoute component={HackathonDetails} />

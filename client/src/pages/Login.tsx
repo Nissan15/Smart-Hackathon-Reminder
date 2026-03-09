@@ -50,7 +50,7 @@ export default function Login() {
         firstName: regFirstName,
         lastName: regLastName
       });
-      toast({ title: "Account created!", description: "Welcome to HackMatch." });
+      toast({ title: "Account created!", description: "Welcome to HackManager." });
     } catch (error: any) {
       toast({
         title: "Registration failed",
@@ -78,7 +78,7 @@ export default function Login() {
             <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20">
               <Terminal className="w-8 h-8 text-white" />
             </div>
-            <span className="font-heading font-bold text-3xl tracking-tight">HackMatch</span>
+            <span className="font-heading font-bold text-3xl tracking-tight">HackManager</span>
           </div>
 
           <h1 className="text-6xl font-heading font-extrabold mb-8 tracking-tight leading-[1.1]">

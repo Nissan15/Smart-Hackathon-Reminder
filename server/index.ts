@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
@@ -7,10 +6,6 @@ import { createServer } from "http";
 
 const app = express();
 const httpServer = createServer(app);
-
-if (app.get("env") === "production") {
-  app.set("trust proxy", 1);
-}
 
 declare module "http" {
   interface IncomingMessage {
@@ -20,6 +15,7 @@ declare module "http" {
 
 app.use(
   express.json({
+    limit: "10mb",
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },
@@ -65,7 +61,7 @@ app.use((req, res, next) => {
   next();
 });
 
-export async function initApp() {
+(async () => {
   await registerRoutes(httpServer, app);
 
   // Initialize background tasks
@@ -94,24 +90,16 @@ export async function initApp() {
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
   }
-}
 
-export { app, httpServer };
-
-// Only start the server if this file is run directly and not on Vercel
-if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
-  (async () => {
-    await initApp();
-    const port = parseInt(process.env.PORT || "5000", 10);
-    httpServer.listen(
-      {
-        port,
-        host: "0.0.0.0",
-      },
-      () => {
-        log(`serving on port ${port}`);
-      },
-    );
-  })();
-}
-
+  // Port configuration
+  const port = parseInt(process.env.PORT || "5000", 10);
+  httpServer.listen(
+    {
+      port,
+      host: "0.0.0.0",
+    },
+    () => {
+      log(`serving on port ${port}`);
+    },
+  );
+})();

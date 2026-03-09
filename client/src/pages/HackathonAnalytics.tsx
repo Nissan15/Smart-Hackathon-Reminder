@@ -1,5 +1,6 @@
 import { useParams } from "wouter";
-import { useHackathonAnalytics } from "@/hooks/use-users";
+import { useHackathonAnalytics, useSendReminders } from "@/hooks/use-users";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,26 @@ export default function HackathonAnalytics() {
     const { id } = useParams<{ id: string }>();
     const hackathonId = Number(id);
     const { data: analytics, isLoading, error } = useHackathonAnalytics(hackathonId);
+    const remindMutation = useSendReminders();
+    const { toast } = useToast();
+
+    const handleSendReminders = () => {
+        remindMutation.mutate(hackathonId, {
+            onSuccess: () => {
+                toast({
+                    title: "Reminders Triggered",
+                    description: "Emails are being sent to relevant students.",
+                });
+            },
+            onError: (err) => {
+                toast({
+                    title: "Error",
+                    description: err instanceof Error ? err.message : "Failed to trigger reminders",
+                    variant: "destructive",
+                });
+            }
+        });
+    };
 
     if (isLoading) {
         return (
@@ -77,6 +98,18 @@ export default function HackathonAnalytics() {
                     <p className="text-muted-foreground mt-2 font-medium">Real-time engagement metrics and student participation data.</p>
                 </div>
                 <div className="flex items-center gap-3">
+                    <Button
+                        onClick={handleSendReminders}
+                        disabled={remindMutation.isPending}
+                        className="rounded-2xl font-bold gap-2 shadow-lg"
+                    >
+                        {remindMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <Mail className="w-4 h-4" />
+                        )}
+                        Send Reminders
+                    </Button>
                     <div className="bg-primary/10 px-4 py-2 rounded-2xl border border-primary/20 flex items-center gap-3">
                         <TrendingUp className="w-5 h-5 text-primary" />
                         <span className="text-sm font-bold text-primary">{stats.registered} Applied</span>

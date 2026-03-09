@@ -1,8 +1,9 @@
 import type { Express } from "express";
 import passport from "passport";
 import { authStorage } from "./storage";
-import { isAuthenticated } from "./replitAuth";
+import { isAuthenticated } from "./passport";
 import bcrypt from "bcryptjs";
+import { storage } from "../storage";
 
 // Register auth-specific routes
 export function registerAuthRoutes(app: Express): void {
@@ -145,13 +146,33 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
-  // Student: Complete Profile
+  // Admin: Get User Registrations
+  app.get("/api/admin/users/:id/registrations", isAuthenticated, async (req: any, res) => {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: "Forbidden: Admin access only" });
+    }
+    try {
+      const { id } = req.params;
+      const regs = await storage.getStudentRegistrations(id);
+      res.json(regs);
+    } catch (error) {
+      console.error("Error fetching user registrations:", error);
+      res.status(500).json({ message: "Failed to fetch user registrations" });
+    }
+  });
+
+  // Student/Admin: Complete Profile
   app.post("/api/user/profile", isAuthenticated, async (req: any, res) => {
     try {
-      const { firstName, lastName, department, registerNumber, section, yearOfGraduation } = req.body;
+      const { firstName, lastName, department, registerNumber, section, yearOfGraduation, profileImageUrl } = req.body;
+      const isStudent = req.user.role === 'student';
 
-      if (!firstName || !lastName || !department || !registerNumber || !section || !yearOfGraduation) {
-        return res.status(400).json({ message: "All fields are required" });
+      if (!firstName || !lastName || !department) {
+        return res.status(400).json({ message: "Name and department are required" });
+      }
+
+      if (isStudent && (!registerNumber || !section || !yearOfGraduation)) {
+        return res.status(400).json({ message: "Academic details are required for students" });
       }
 
       const updatedUser = await authStorage.upsertUser({
@@ -159,9 +180,10 @@ export function registerAuthRoutes(app: Express): void {
         firstName,
         lastName,
         department,
-        registerNumber,
-        section,
-        yearOfGraduation,
+        registerNumber: isStudent ? registerNumber : "",
+        section: isStudent ? section : "",
+        yearOfGraduation: isStudent ? yearOfGraduation : 0,
+        profileImageUrl: profileImageUrl !== undefined ? profileImageUrl : (req.user.profileImageUrl || ""),
         profileCompleted: true,
       } as any);
 

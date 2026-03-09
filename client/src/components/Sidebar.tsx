@@ -13,7 +13,8 @@ import {
     Terminal,
     Menu,
     X,
-    Users as UsersIcon
+    Users as UsersIcon,
+    Archive
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -32,16 +33,17 @@ export function Sidebar() {
         setIsMobileOpen(false);
     }, [location]);
 
-    const isAdmin = user?.role === 'admin' || (user as any)?.isAdmin;
+    const isAdmin = user?.role === 'admin';
 
     const baseItems = [
         { icon: LayoutDashboard, label: "Dashboard", href: "/" },
         { icon: Calendar, label: "Hackathons", href: "/hackathons" },
+        { icon: Archive, label: "Past Hackathons", href: "/past-hackathons" },
         { icon: User, label: "Profile", href: "/profile" },
     ];
 
     const studentItems = [
-        { icon: ClipboardCheck, label: "Registered", href: "/registered" },
+        { icon: ClipboardCheck, label: "My Registrations", href: "/registered" },
         { icon: Clock, label: "Deadlines", href: "/deadlines" },
     ];
 
@@ -56,7 +58,7 @@ export function Sidebar() {
 
     const menuItems = isAdmin
         ? [...baseItems, ...adminItems]
-        : [baseItems[0], baseItems[1], ...studentItems, baseItems[2]];
+        : [baseItems[0], baseItems[1], baseItems[2], ...studentItems, baseItems[3]];
 
     const sidebarContent = (
         <div className="flex flex-col h-full bg-slate-900 text-slate-300 py-6">
@@ -121,8 +123,10 @@ export function Sidebar() {
                 })}
             </nav>
 
+
             {/* Logout & Collapse */}
-            <div className="px-4 mt-auto space-y-4">
+
+            <div className="px-4 space-y-4">
                 <Button
                     variant="ghost"
                     className={cn(

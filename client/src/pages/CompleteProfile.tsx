@@ -46,14 +46,25 @@ export default function CompleteProfile() {
                 throw new Error("Please enter your department");
             }
 
-            await completeProfile({
-                firstName,
-                lastName,
-                department: finalDepartment,
-                registerNumber,
-                section,
-                yearOfGraduation: parseInt(yearOfGraduation)
-            });
+            if (user.role === "student") {
+                await completeProfile({
+                    firstName,
+                    lastName,
+                    department: finalDepartment,
+                    registerNumber,
+                    section,
+                    yearOfGraduation: parseInt(yearOfGraduation)
+                });
+            } else {
+                await completeProfile({
+                    firstName,
+                    lastName,
+                    department: finalDepartment,
+                    registerNumber: "",
+                    section: "",
+                    yearOfGraduation: 0
+                });
+            }
             toast({ title: "Profile Completed", description: "Welcome to the platform!" });
         } catch (error: any) {
             toast({
@@ -133,49 +144,53 @@ export default function CompleteProfile() {
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="section">Section</Label>
-                                    <Select value={section} onValueChange={setSection} required>
-                                        <SelectTrigger id="section" className="bg-zinc-50/50 dark:bg-zinc-900/50">
-                                            <SelectValue placeholder="Select" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {SECTIONS.map((sec) => (
-                                                <SelectItem key={sec} value={sec}>
-                                                    {sec}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="yearOfGraduation">Graduation Year</Label>
-                                    <Select value={yearOfGraduation} onValueChange={setYearOfGraduation} required>
-                                        <SelectTrigger id="yearOfGraduation" className="bg-zinc-50/50 dark:bg-zinc-900/50">
-                                            <SelectValue placeholder="Select" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {GRADUATION_YEARS.map((year) => (
-                                                <SelectItem key={year} value={year}>
-                                                    {year}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
+                            {user.role === "student" && (
+                                <>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="section">Section</Label>
+                                            <Select value={section} onValueChange={setSection} required>
+                                                <SelectTrigger id="section" className="bg-zinc-50/50 dark:bg-zinc-900/50">
+                                                    <SelectValue placeholder="Select" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {SECTIONS.map((sec) => (
+                                                        <SelectItem key={sec} value={sec}>
+                                                            {sec}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="yearOfGraduation">Graduation Year</Label>
+                                            <Select value={yearOfGraduation} onValueChange={setYearOfGraduation} required>
+                                                <SelectTrigger id="yearOfGraduation" className="bg-zinc-50/50 dark:bg-zinc-900/50">
+                                                    <SelectValue placeholder="Select" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {GRADUATION_YEARS.map((year) => (
+                                                        <SelectItem key={year} value={year}>
+                                                            {year}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="regNumber">Register Number</Label>
-                                <Input
-                                    id="regNumber"
-                                    placeholder="e.g. 21CS001"
-                                    value={registerNumber}
-                                    onChange={(e) => setRegisterNumber(e.target.value)}
-                                    required
-                                />
-                            </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="regNumber">Register Number</Label>
+                                        <Input
+                                            id="regNumber"
+                                            placeholder="e.g. 21CS001"
+                                            value={registerNumber}
+                                            onChange={(e) => setRegisterNumber(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </>
+                            )}
 
                             <Button type="submit" className="w-full h-11" disabled={isCompletingProfile}>
                                 {isCompletingProfile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

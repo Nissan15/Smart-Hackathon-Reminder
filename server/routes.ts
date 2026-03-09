@@ -3,11 +3,11 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api, errorSchemas } from "@shared/routes";
 import { z } from "zod";
-import { isAuthenticated } from "./replit_integrations/auth";
+import { isAuthenticated } from "./auth";
 import { users } from "@shared/models/auth";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
-import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
+import { setupAuth, registerAuthRoutes } from "./auth";
 import bcrypt from "bcryptjs";
 import { sendEmail } from "./email";
 
@@ -82,7 +82,8 @@ export async function registerRoutes(
 
   app.get(api.hackathons.get.path, async (req, res) => {
     const hackathonId = Number(req.params.id);
-    const item = await storage.getHackathon(hackathonId);
+    const userId = (req as any).user?.id;
+    const item = await storage.getHackathon(hackathonId, userId);
     if (!item) return res.status(404).json({ message: "Not found" });
 
     // Increment views if it's a student (not an admin or unauthorized is fine too, but let's be specific)
@@ -243,6 +244,45 @@ export async function registerRoutes(
     res.status(204).end();
   });
 
+  // Submissions
+  app.post("/api/submissions", isAuthenticated, async (req, res) => {
+    try {
+      const { hackathonId } = req.body;
+      const userId = (req as any).user.id;
+
+      if (!hackathonId) {
+        return res.status(400).json({ message: "Hackathon ID is required" });
+      }
+
+      const hackathon = await storage.getHackathon(Number(hackathonId), userId);
+      if (!hackathon) {
+        return res.status(404).json({ message: "Hackathon not found" });
+      }
+
+      if (!hackathon.isRegistered) {
+        return res.status(403).json({ message: "You must be registered to submit an idea." });
+      }
+
+      // Check if current time is within submission window (assume before submissionDeadline)
+      const now = new Date();
+      if (now > new Date(hackathon.submissionDeadline)) {
+        return res.status(400).json({ message: "Submission deadline has passed" });
+      }
+
+      // Check if already submitted
+      const existing = await storage.getSubmission(userId, Number(hackathonId));
+      if (existing) {
+        return res.status(400).json({ message: "You have already submitted your idea." });
+      }
+
+      const sub = await storage.submitIdea(userId, Number(hackathonId));
+      res.status(201).json(sub);
+    } catch (err) {
+      console.error("Submission error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Stats
   app.get(api.stats.dashboard.path, isAuthenticated, async (req, res) => {
     const userId = (req as any).user.id;
@@ -259,20 +299,23 @@ export async function registerRoutes(
 
 
 
-  app.get("/api/test-email", isAuthenticated, async (req: any, res) => {
+  app.post("/api/admin/hackathons/:id/remind", isAuthenticated, async (req: any, res) => {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: "Forbidden: Admin access only" });
+    }
     try {
-      const success = await sendEmail(
-        req.user.email,
-        "SmartHack Email Test",
-        "<h3>Test Success!</h3><p>If you see this, your SMTP configuration is working correctly.</p>"
-      );
-      if (success) {
-        res.json({ message: "Test email sent successfully" });
-      } else {
-        res.status(500).json({ message: "Failed to send test email. Check server logs." });
-      }
+      const hackathonId = Number(req.params.id);
+      const hackathon = await storage.getHackathon(hackathonId);
+      if (!hackathon) return res.status(404).json({ message: "Hackathon not found" });
+
+      const { sendHackathonReminders } = await import("./cron");
+      // Trigger reminders asynchronously
+      sendHackathonReminders(hackathonId).catch(err => console.error("Manual reminder error:", err));
+
+      res.json({ message: "Reminders are being sent to relevant students" });
     } catch (error) {
-      res.status(500).json({ message: "Error in test-email endpoint", error: String(error) });
+      console.error("Error triggering reminders:", error);
+      res.status(500).json({ message: "Failed to trigger reminders" });
     }
   });
 
@@ -280,24 +323,6 @@ export async function registerRoutes(
     const userId = (req as any).user.id;
     const notifications = await storage.getNotifications(userId);
     res.json(notifications);
-  });
-
-  // Cron trigger endpoint
-  app.get("/api/cron/reminders", async (req, res) => {
-    // Check for cron secret if configured
-    const cronSecret = req.headers["x-cron-secret"];
-    if (process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    try {
-      const { runDeadlineReminders } = await import("./cron");
-      await runDeadlineReminders();
-      res.json({ message: "Cron job triggered successfully" });
-    } catch (error) {
-      console.error("Cron trigger endpoint error:", error);
-      res.status(500).json({ message: "Cron job failed", error: String(error) });
-    }
   });
 
   return httpServer;

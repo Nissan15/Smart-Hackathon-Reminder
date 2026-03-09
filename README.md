@@ -83,26 +83,6 @@ The platform serves as a central hub for university hackathons, allowing admins 
 │   └── index.ts         # Server entry point
 ├── shared/              # Shared TypeScript types and Zod schemas
 │   ├── schema.ts        # Database table definitions
+│   └── routes.ts        # API route definitions
 └── package.json         # Project dependencies and scripts
-```
-
-## 🌐 Deployment (Vercel)
-
-This project is configured for easy deployment on **Vercel**.
-
-### Steps to Deploy
-
-1. **Connect your Repository**: Push your code to GitHub/GitLab/Bitbucket.
-2. **Create a New Project on Vercel**: Import the repository.
-3. **Configure Environment Variables**: Add the following variables in the Vercel Dashboard:
-   - `DATABASE_URL`: Your PostgreSQL connection string.
-   - `SESSION_SECRET`: A long random string for session encryption.
-   - `SMTP_USER`, `SMTP_PASS`, etc.: For email notifications.
-   - `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`: For Google OAuth.
-4. **Build & Deploy**: Vercel will automatically detect the `vercel.json` and use the defined build command.
-
-### Local Vercel Testing
-If you have the Vercel CLI installed, you can test the deployment locally:
-```powershell
-npx vercel dev
 ```
