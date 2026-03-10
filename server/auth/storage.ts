@@ -1,6 +1,6 @@
 import { users, type User, type UpsertUser } from "@shared/models/auth";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 // Interface for auth storage operations
 export interface IAuthStorage {
@@ -28,7 +28,7 @@ class AuthStorage implements IAuthStorage {
   }
 
   async getUserCount(): Promise<number> {
-    const result = await db.select({ count: db.$count(users) }).from(users);
+    const result = await db.select({ count: sql<number>`count(*)` }).from(users);
     return Number(result[0]?.count || 0);
   }
 
