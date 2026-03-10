@@ -8,11 +8,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(__dirname, "..", "dist", "public");
-  console.log(`[Static] Serving build from: ${distPath}`);
+  const distPath = path.join(__dirname, "..", "dist", "public");
+  console.log(`[StaticDiagnostics] Resolving build from: ${distPath}`);
+
   if (!fs.existsSync(distPath)) {
+    const rootPath = path.join(__dirname, "..");
+    const rootFiles = fs.readdirSync(rootPath);
+    console.log(`[StaticDiagnostics] Root directory contains: ${rootFiles.join(", ")}`);
+
     throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
+      `CRITICAL: Build directory NOT FOUND at ${distPath}. Please ensure "npm run build" has successfully completed before starting the server.`,
     );
   }
 
