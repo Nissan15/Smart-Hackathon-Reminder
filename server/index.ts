@@ -2,11 +2,19 @@ import "dotenv/config";
 import dns from "node:dns";
 dns.setDefaultResultOrder("ipv4first");
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
 const app = express();
+app.set("trust proxy", 1);
+
+app.use(cors({
+  origin: process.env.VITE_FRONTEND_URL || true, // Allow specific origin or reflect request origin
+  credentials: true,
+}));
+
 const httpServer = createServer(app);
 
 declare module "http" {
