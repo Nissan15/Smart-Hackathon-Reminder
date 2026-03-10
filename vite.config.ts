@@ -18,13 +18,9 @@ export default defineConfig({
     emptyOutDir: true,
     reportCompressedSize: false,
     sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ["react", "react-dom", "framer-motion", "lucide-react", "recharts"],
-        },
-      },
-    },
+    minify: "esbuild",
+    cssMinify: true,
+    assetsInlineLimit: 0, // Don't inline assets into JS (saves memory during build)
   },
   server: {
     fs: {
