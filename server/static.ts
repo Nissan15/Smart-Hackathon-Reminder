@@ -23,8 +23,13 @@ export function serveStatic(app: Express) {
 
   app.use(express.static(distPath));
 
-  // standard SPA catch-all for Express 5
-  app.get("(.*)", (_req, res) => {
+  // SPA catch-all: Use a middleware without a path to match everything.
+  // This is the most compatible way to handle SPA routing in Express 5.
+  app.use((req, res, next) => {
+    // Skip if it's an API request (should have been handled above)
+    if (req.path.startsWith("/api")) {
+      return next();
+    }
     res.sendFile(path.join(distPath, "index.html"));
   });
 }
