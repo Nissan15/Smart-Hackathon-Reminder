@@ -9,6 +9,7 @@ const __dirname = dirname(__filename);
 
 export function serveStatic(app: Express) {
   const distPath = path.resolve(__dirname, "..", "dist", "public");
+  console.log(`[Static] Serving build from: ${distPath}`);
   if (!fs.existsSync(distPath)) {
     throw new Error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`,
