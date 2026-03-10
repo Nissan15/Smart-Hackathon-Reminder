@@ -23,8 +23,8 @@ export function serveStatic(app: Express) {
 
   app.use(express.static(distPath));
 
-  // standard SPA catch-all
-  app.get("*", (_req, res) => {
+  // standard SPA catch-all for Express 5
+  app.get("(.*)", (_req, res) => {
     res.sendFile(path.join(distPath, "index.html"));
   });
 }
