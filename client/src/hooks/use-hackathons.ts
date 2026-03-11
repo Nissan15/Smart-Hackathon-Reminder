@@ -2,30 +2,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
 import type { Hackathon, InsertHackathon, HackathonWithCounts } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 export function useHackathons() {
   return useQuery({
     queryKey: [api.hackathons.list.path],
-    queryFn: async () => {
-      const res = await fetch(api.hackathons.list.path, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch hackathons");
-      return await res.json() as (Hackathon & { registrationCount: number; isRegistered: boolean })[];
-    },
+    select: (data: any) => data as (Hackathon & { registrationCount: number; isRegistered: boolean })[],
   });
 }
 
 export function useHackathon(id: number) {
   return useQuery({
-    queryKey: [api.hackathons.get.path, id],
-    queryFn: async () => {
-      const url = buildUrl(api.hackathons.get.path, { id });
-      const res = await fetch(url, { credentials: "include" });
-      if (res.status === 404) return null;
-      if (!res.ok) throw new Error("Failed to fetch hackathon");
-      const data = await res.json();
-      return data as HackathonWithCounts;
-    },
+    queryKey: [buildUrl(api.hackathons.get.path, { id })],
     enabled: !!id,
+    select: (data: any) => data as HackathonWithCounts,
   });
 }
 
@@ -35,18 +25,7 @@ export function useCreateHackathon() {
 
   return useMutation({
     mutationFn: async (data: InsertHackathon) => {
-      // Zod coercion happens on server, but we ensure dates are strings/dates correctly here
-      const res = await fetch(api.hackathons.create.path, {
-        method: api.hackathons.create.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to create hackathon");
-      }
+      const res = await apiRequest(api.hackathons.create.method, api.hackathons.create.path, data);
       return await res.json();
     },
     onSuccess: () => {
@@ -67,14 +46,7 @@ export function useUpdateHackathon() {
   return useMutation({
     mutationFn: async ({ id, ...data }: Partial<InsertHackathon> & { id: number }) => {
       const url = buildUrl(api.hackathons.update.path, { id });
-      const res = await fetch(url, {
-        method: api.hackathons.update.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error("Failed to update hackathon");
+      const res = await apiRequest(api.hackathons.update.method, url, data);
       return await res.json();
     },
     onSuccess: () => {
@@ -95,12 +67,7 @@ export function useDeleteHackathon() {
   return useMutation({
     mutationFn: async (id: number) => {
       const url = buildUrl(api.hackathons.delete.path, { id });
-      const res = await fetch(url, {
-        method: api.hackathons.delete.method,
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error("Failed to delete hackathon");
+      await apiRequest(api.hackathons.delete.method, url);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.hackathons.list.path] });
@@ -119,19 +86,12 @@ export function useRegisterForHackathon() {
 
   return useMutation({
     mutationFn: async (hackathonId: number) => {
-      const res = await fetch(api.registrations.create.path, {
-        method: api.registrations.create.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hackathonId }),
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error("Failed to register");
+      const res = await apiRequest(api.registrations.create.method, api.registrations.create.path, { hackathonId });
       return await res.json();
     },
     onSuccess: (_, hackathonId) => {
       queryClient.invalidateQueries({ queryKey: [api.hackathons.list.path] });
-      queryClient.invalidateQueries({ queryKey: [api.hackathons.get.path, hackathonId] });
+      queryClient.invalidateQueries({ queryKey: [buildUrl(api.hackathons.get.path, { id: hackathonId })] });
       queryClient.invalidateQueries({ queryKey: [api.registrations.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.stats.dashboard.path] });
       queryClient.invalidateQueries({ queryKey: [api.notifications.list.path] });
@@ -143,27 +103,15 @@ export function useRegisterForHackathon() {
   });
 }
 
-
-
 export function useStats() {
   return useQuery({
     queryKey: [api.stats.dashboard.path],
-    queryFn: async () => {
-      const res = await fetch(api.stats.dashboard.path, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch dashboard stats");
-      return await res.json();
-    },
   });
 }
 
 export function useNotifications() {
   return useQuery({
     queryKey: [api.notifications.list.path],
-    queryFn: async () => {
-      const res = await fetch(api.notifications.list.path, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch notifications");
-      return await res.json() as any[];
-    },
     refetchInterval: 30000,
   });
 }
@@ -174,21 +122,11 @@ export function useSubmitIdea() {
 
   return useMutation({
     mutationFn: async (hackathonId: number) => {
-      const res = await fetch(api.submissions.create.path, {
-        method: api.submissions.create.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hackathonId }),
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to submit idea");
-      }
+      const res = await apiRequest(api.submissions.create.method, api.submissions.create.path, { hackathonId });
       return await res.json();
     },
     onSuccess: (_, hackathonId) => {
-      queryClient.invalidateQueries({ queryKey: [api.hackathons.get.path, hackathonId] });
+      queryClient.invalidateQueries({ queryKey: [buildUrl(api.hackathons.get.path, { id: hackathonId })] });
       toast({ title: "Success", description: "Your idea has been submitted!" });
     },
     onError: (error: Error) => {

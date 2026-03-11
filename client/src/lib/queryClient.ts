@@ -8,7 +8,7 @@ async function throwIfResNotOk(res: Response) {
 }
 
 // Helper to construct absolute URLs if VITE_API_URL is set
-const getUrl = (path: string) => {
+export const getUrl = (path: string) => {
   const baseUrl = import.meta.env.VITE_API_URL || "";
   // If baseline is empty or path is already absolute, return as is
   if (!baseUrl || path.startsWith("http")) return path;
