@@ -12,15 +12,15 @@ export default defineConfig({
       "@shared": path.resolve(import.meta.dirname, "shared"),
     },
   },
-  root: path.resolve(import.meta.dirname, "client"),
+  root: "client",
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: "../dist/public",
     emptyOutDir: true,
     reportCompressedSize: false,
     sourcemap: false,
     minify: "esbuild",
     cssMinify: true,
-    assetsInlineLimit: 0, // Don't inline assets into JS (saves memory during build)
+    assetsInlineLimit: 0,
   },
   server: {
     fs: {
